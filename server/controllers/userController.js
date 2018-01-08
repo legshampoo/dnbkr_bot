@@ -4,22 +4,8 @@ const mongoose = require('mongoose');
 
 const passport = require('passport');
 const User = mongoose.model('User');
-const Device = mongoose.model('Device');
 
 const promisify = require('es6-promisify');
-
-//file upload stuff
-const aws = require('aws-sdk');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
-const spacesEndpoint = new aws.Endpoint('nyc3.digitaloceanspaces.com');
-const s3 = new aws.S3({
-	endpoint: process.env.DIGITALOCEAN_STORAGE_ENDPOINT,
-	accessKeyId: process.env.DIGITALOCEAN_STORAGE_KEY,
-	secretAccessKey: process.env.DIGITALOCEAN_STORAGE_SECRET
-});
-
-
 
 exports.attemptedLoginDetection = function(req, res, next){
 	console.log('User attempting to login...');
@@ -147,105 +133,4 @@ exports.logout = (req, res) => {
 	}
 
 	res.send(response);
-}
-
-exports.upload = multer({
-	storage: multer.memoryStorage()
-}).single('file');
-
-exports.uploadVideo = (req, res) => {
-	console.log('/user/upload/video');
-	console.log('req.file', req.file);
-	console.log('req.body', req.body);
-	const bucket = 'videomanager';
-	const path = '/videos/';
-	var key = path + req.body.fileName;
-	// var key = path + 'filenamez';
-
-	var params = {
-		Bucket: bucket,
-		Key: key,
-		ACL: 'public-read',
-		Body: req.file.buffer
-	}
-
-	var uploadFile = s3.putObject(params).promise();
-
-	uploadFile.then(data => {
-		console.log('Upload success!!!');
-		console.log(data);
-
-		var response = {
-			api: {
-				error: false,
-				message: 'User uploaded video'
-			}
-		}
-
-		return res.send(response);
-
-	})
-	.catch(err => {
-		console.log('error: ', err);
-		return
-	});
-}
-
-exports.addDevice = async (req, res) => {
-	console.log('/user/add-device');
-	console.log('req.body', req.body);
-
-
-	console.log('add device here');
-
-	const device = new Device({
-		owner: req.body.owner,
-		ownerName: req.body.ownerName,
-		ownerId: req.body.ownerId,
-		deviceName: req.body.deviceName,
-		uuid: req.body.uuid
-	});
-
-	const success = await device.save()
-	.then(data => {
-		console.log('Added Device to mongodb: ', data);
-		return true
-	})
-	.catch(err => {
-		console.log('MongoDB error adding device:');
-		console.log(err);
-		return false;
-		// var response = {
-		// 	api: {
-		// 		error: true,
-		// 		message: 'Failed to add new device'
-		// 	}
-		// }
-    //
-		// res.send(response);
-	});
-
-	var response = {};
-
-	if(success){
-		response.api = {
-			error: false,
-			message: 'Device added to owner'
-		};
-	}else{
-		response.api = {
-			error: true,
-			message: 'Error adding device'
-		};
-	}
-  //
-	// var response = {
-	// 	api: {
-	// 		error: false,
-	// 		message: 'User added new device'
-	// 	}
-	// }
-
-	return res.send(response);
-
 }

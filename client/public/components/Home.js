@@ -8,11 +8,11 @@ class Home extends React.Component {
     return (
       <div>
         Home <br />
-        <NavLink to='/dashboard/login'>
+        <NavLink to='/user/login'>
           Log In
         </NavLink>
         <br />
-        <NavLink to='/dashboard/register'>
+        <NavLink to='/user/register'>
           Create an Account
         </NavLink>
       </div>)

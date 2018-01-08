@@ -4,11 +4,7 @@ import {
   USER_REGISTER_SUCCESS,
   USER_REGISTER_FAIL,
   USER_LOGOUT_SUCCESS,
-  USER_LOGOUT_FAIL,
-  UPLOAD_VIDEO_SUCCESS,
-  UPLOAD_VIDEO_FAIL,
-  ADD_DEVICE_SUCCESS,
-  ADD_DEVICE_FAIL
+  USER_LOGOUT_FAIL
 } from '../actions/userActions';
 
 const initialState = {
@@ -55,22 +51,6 @@ function userReducer(state = initialState, action){
     case USER_LOGOUT_FAIL:
       console.log(action);
       return state
-
-    case UPLOAD_VIDEO_SUCCESS:
-      console.log(action);
-    return state
-
-    case UPLOAD_VIDEO_FAIL:
-      console.log(action);
-    return state
-
-    case ADD_DEVICE_SUCCESS:
-      console.log(action);
-    return state
-
-    case ADD_DEVICE_FAIL:
-      console.log(action);
-    return state
 
     default:
       return state

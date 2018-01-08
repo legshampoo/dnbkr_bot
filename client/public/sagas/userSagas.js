@@ -8,9 +8,7 @@ import {
 import {
   userLogin,
   userLogout,
-  userRegister,
-  uploadVideo,
-  addDevice
+  userRegister
 } from '../api/userApi';
 
 import {
@@ -22,13 +20,7 @@ import {
   USER_REGISTER_FAIL,
   USER_LOGOUT,
   USER_LOGOUT_SUCCESS,
-  USER_LOGOUT_FAIL,
-  UPLOAD_VIDEO,
-  UPLOAD_VIDEO_SUCCESS,
-  UPLOAD_VIDEO_FAIL,
-  ADD_DEVICE,
-  ADD_DEVICE_SUCCESS,
-  ADD_DEVICE_FAIL
+  USER_LOGOUT_FAIL
 } from '../actions/userActions';
 
 function * user_login(action){
@@ -76,42 +68,10 @@ function * user_logout(action){
   }
 }
 
-function * upload_video(action){
-  try{
-    const response = yield call(uploadVideo, action.payload);
-    yield put({
-      type: UPLOAD_VIDEO_SUCCESS,
-      payload: response
-    });
-  }catch(e){
-    yield put({
-      type: UPLOAD_VIDEO_FAIL,
-      payload: e
-    });
-  }
-}
-
-function * add_device(action){
-  try{
-    const response = yield call(addDevice, action.payload);
-    yield put({
-      type: ADD_DEVICE_SUCCESS,
-      payload: response
-    });
-  }catch(e){
-    yield put({
-      type: ADD_DEVICE_FAIL,
-      payload: e
-    });
-  }
-}
-
 function * sagas(){
   yield takeEvery('USER_LOGIN', user_login);
   yield takeEvery('USER_REGISTER', user_register);
   yield takeEvery('USER_LOGOUT', user_logout);
-  yield takeEvery('UPLOAD_VIDEO', upload_video);
-  yield takeEvery('ADD_DEVICE', add_device);
 }
 
 export default sagas;

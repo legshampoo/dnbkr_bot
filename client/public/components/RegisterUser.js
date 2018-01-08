@@ -16,8 +16,8 @@ class RegisterUser extends React.Component {
       this.props = nextProps;
 
       if(this.props.user.authorized){
-        console.log('yees authed');
-        this.props.history.push('/dashboard/home');
+        console.log('User is authorized');
+        this.props.history.push('/dashboard');
       }
     }
   }

@@ -8,6 +8,8 @@ import TextField from 'material-ui/TextField';
 
 import { userLogin } from '../actions/userActions';
 
+import { createTopic } from '../actions/topicActions';
+
 class LoginForm extends React.Component {
   constructor(props){
     super(props);
@@ -64,7 +66,7 @@ class LoginForm extends React.Component {
             type='submit' />
         </form>
         <br />
-        Not Registered? <NavLink to='/dashboard/register'>Sign Up!</NavLink>
+        Not Registered? <NavLink to='/user/register'>Sign Up!</NavLink>
       </div>)
   }
 }

@@ -16,7 +16,7 @@ class Login extends React.Component {
       this.props = nextProps;
       if(this.props.user.authorized){
         console.log('User is authed');
-        this.props.history.push('/dashboard/home');
+        this.props.history.push('/dashboard');
       }
     }
   }
@@ -28,9 +28,6 @@ class Login extends React.Component {
       </div>)
   }
 }
-
-// export default Login;
-
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -44,5 +41,4 @@ const mapDispatchToProps = dispatch => {
   }
 }
 
-// export default LoginForm;
 export default connect(mapStateToProps, mapDispatchToProps)(Login);

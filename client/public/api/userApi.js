@@ -62,37 +62,3 @@ export const userLogout = async (payload) => {
     })
   })
 }
-
-export const uploadVideo = async (payload) => {
-  const url = '/api/user/upload/video';
-
-  console.log('post: ', url);
-
-
-  return new Promise((fulfill, reject) => {
-    axios.post(url, payload)
-    .then(res => {
-      fulfill(res);
-    })
-    .catch(err => {
-      reject(err);
-    })
-  })
-}
-
-export const addDevice = async (payload) => {
-  const url = '/api/user/add-device';
-
-  console.log('post: ', url);
-
-
-  return new Promise((fulfill, reject) => {
-    axios.post(url, payload)
-    .then(res => {
-      fulfill(res);
-    })
-    .catch(err => {
-      reject(err);
-    })
-  })
-}

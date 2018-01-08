@@ -7,12 +7,6 @@ export const USER_REGISTER_FAIL = 'USER_REGISTER_FAIL';
 export const USER_LOGOUT = 'USER_LOGOUT';
 export const USER_LOGOUT_SUCCESS = 'USER_LOGOUT_SUCCESS';
 export const USER_LOGOUT_FAIL = 'USER_LOGOUT_FAIL';
-export const UPLOAD_VIDEO = 'UPLOAD_VIDEO';
-export const UPLOAD_VIDEO_SUCCESS = 'UPLOAD_VIDEO_SUCCESS';
-export const UPLOAD_VIDEO_FAIL = 'UPLOAD_VIDEO_FAIL';
-export const ADD_DEVICE = 'ADD_DEVICE';
-export const ADD_DEVICE_SUCCESS = 'ADD_DEVICE_SUCCESS';
-export const ADD_DEVICE_FAIL = 'ADD_DEVICE_FAIL';
 
 export function userLogin(values){
   console.log('DISPATCH: ', USER_LOGIN);
@@ -36,24 +30,6 @@ export function userLogout(values){
 
   return {
     type: USER_LOGOUT,
-    payload: values
-  }
-}
-
-export function uploadVideo(values){
-  console.log('DISPATCH: ', UPLOAD_VIDEO);
-
-  return {
-    type: UPLOAD_VIDEO,
-    payload: values
-  }
-}
-
-export function addDevice(values){
-  console.log('DISPATCH: ', ADD_DEVICE);
-
-  return {
-    type: ADD_DEVICE,
     payload: values
   }
 }

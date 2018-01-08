@@ -11,6 +11,14 @@ const passport = require('passport');
 const session = require('express-session');
 // const MongoStore = require('connect-mongo')(session);
 
+const socketServer = require('./server/sockets/socketServer');
+//START BOTS
+const reddit_bot = require('./server/bots/reddit/reddit_bot');
+const mongoTestUtils = require('./server/utils/mongoTestUtils');
+
+reddit_bot.init();
+
+
 const app = express();
 
 const DEFAULT_PORT = 3000;
@@ -19,12 +27,12 @@ app.set("port", process.env.PORT || DEFAULT_PORT);
 
 //import our models
 // THIS NEEDS TO BE BEFORE ROUTES, otherwise it won't be imported
-require('./server/models/Device');
 require('./server/models/User');
+require('./server/models/Topic');
 require('./server/handlers/passport');
 
 //this needs to come AFTER model imports
-const routes = require('./server/routes/index');
+const routes = require('./server/routes/routes');
 
 app.use(express.static(path.join(__dirname, '/client/dist')));
 app.use(bodyParser.json());
@@ -33,7 +41,9 @@ app.use(bodyParser.urlencoded({
 }));
 //this needs to be before passport.session
 app.use(session({
-  secret: 'session-secret'
+  secret: 'session-secret',
+  resave: true,
+  saveUninitialized: true
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -41,9 +51,11 @@ app.use(expressValidator());  //for validating data before mongo entry, applies 
 app.use('/api', routes);
 
 mongoose.Promise = global.Promise;  //tell mongoose to use ES6 promises
+
 mongoose.connect(process.env.DATABASE, {})
 .then(() => {
   console.log('Conected to MongoDB');
+  // mongoTestUtils.findOneAndUpdate();
 })
 .catch(err => {
   console.log(err);
@@ -99,6 +111,7 @@ app.get('*', (req, res) => {
   res.sendFile(__dirname + '/client/dist/index.html');
 });
 
-app.listen(app.get('port'), function () {
-  console.log('Example app listening on port ' + app.get('port') + '!\n');
+const server = app.listen(app.get('port'), function () {
+  console.log('Server listening on port ' + app.get('port') + '!\n');
+  socketServer.init(server);
 });

@@ -6,12 +6,12 @@ import {
   all
 } from 'redux-saga/effects';
 
-import deviceSagas from './deviceSagas';
 import userSagas from './userSagas';
+import topicSagas from './topicSagas';
 
 export default function* rootSaga(){
   yield all([
-    deviceSagas(),
-    userSagas()
+    userSagas(),
+    topicSagas()
   ])
 }

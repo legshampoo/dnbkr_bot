@@ -1,12 +1,12 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux'
 
-import deviceReducer from './deviceReducer';
 import userReducer from './userReducer';
+import topicReducer from './topicReducer';
 
 const rootReducer = combineReducers({
-  device: deviceReducer,
-  user: userReducer
+  user: userReducer,
+  topics: topicReducer
 });
 
 export default rootReducer;
