@@ -7,21 +7,11 @@ import {
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-import { subscribeToTimer, unmount } from '../api/socket';
-
 class DashboardDefault extends React.Component {
   constructor(props){
     super(props);
 
-    // subscribeToTimer((err, timestamp) => this.setState({
-    //   timestamp
-    // }), () => {
-    //   console.log('got socket message');
-    // });
 
-    this.state = {
-      timestamp: 'no timestamp yet'
-    }
   }
 
   componentDidMount(){
@@ -32,24 +22,12 @@ class DashboardDefault extends React.Component {
     }else{
       console.log('User is Authorized');
     }
-
-    subscribeToTimer((err, timestamp) => this.setState({
-      timestamp
-    }), () => {
-      console.log('got socket message');
-    });
-  }
-
-  componentWillUnmount(){
-    console.log('unmount');
-    unmount();
   }
 
   render(){
     return (
       <div>
         Dashboard Default<br />
-        {this.state.timestamp}
       </div>)
   }
 }

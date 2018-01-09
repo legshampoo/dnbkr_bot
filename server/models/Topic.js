@@ -34,4 +34,4 @@ topicSchema.pre('save', function(next){
 //prettifies mongodb errors for better logging
 topicSchema.plugin(mongodbErrorHandler);
 
-module.exports = mongoose.model('Topic', topicSchema);
+module.exports = mongoose.model('Topic', topicSchema, 'Topic');

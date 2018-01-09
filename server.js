@@ -14,22 +14,14 @@ const session = require('express-session');
 const socketServer = require('./server/sockets/socketServer');
 //START BOTS
 const reddit_bot = require('./server/bots/reddit/reddit_bot');
-const mongoTestUtils = require('./server/utils/mongoTestUtils');
 
-reddit_bot.init();
-
+const database = require('./server/database/database');
 
 const app = express();
 
 const DEFAULT_PORT = 3000;
 const env = process.env.NODE_ENV || 'NOT DEFINED';
 app.set("port", process.env.PORT || DEFAULT_PORT);
-
-//import our models
-// THIS NEEDS TO BE BEFORE ROUTES, otherwise it won't be imported
-require('./server/models/User');
-require('./server/models/Topic');
-require('./server/handlers/passport');
 
 //this needs to come AFTER model imports
 const routes = require('./server/routes/routes');
@@ -50,27 +42,13 @@ app.use(passport.session());
 app.use(expressValidator());  //for validating data before mongo entry, applies the methods to all requests, you just call ie req.sanitize('name')
 app.use('/api', routes);
 
-mongoose.Promise = global.Promise;  //tell mongoose to use ES6 promises
-
-mongoose.connect(process.env.DATABASE, {})
-.then(() => {
-  console.log('Conected to MongoDB');
-  // mongoTestUtils.findOneAndUpdate();
-})
-.catch(err => {
-  console.log(err);
-});
-
-mongoose.connection.on('error', (err) => {
-  console.log('Mongoose connection error', err.message);
-});
 
 if(env == 'development'){
-  console.log('\n \n \n');
+  console.log('\n');
   console.log("================================================>")
-  console.log('\n \n \n')
+  console.log('\n \n')
   console.log('Sever running in DEVELOPMENT MODE');
-  console.log('\n \n \n')
+  console.log('\n \n')
 
   const webpack = require('webpack');
   const webpackDevMiddleware = require('webpack-dev-middleware');
@@ -97,11 +75,11 @@ if(env == 'development'){
   }));
 
 }else{
-  console.log('\n \n \n');
+  console.log('\n');
   console.log("================================================>")
-  console.log('\n \n \n')
+  console.log('\n \n')
   console.log('Server running in PRODUCTION MODE');
-  console.log('\n \n \n');
+  console.log('\n \n');
 }
 
 app.get('*', (req, res) => {
@@ -111,7 +89,9 @@ app.get('*', (req, res) => {
   res.sendFile(__dirname + '/client/dist/index.html');
 });
 
-const server = app.listen(app.get('port'), function () {
+const server = app.listen(app.get('port'), '0.0.0.0', function () {
   console.log('Server listening on port ' + app.get('port') + '!\n');
+  database.init();
+  reddit_bot.init();
   socketServer.init(server);
 });

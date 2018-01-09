@@ -15,6 +15,7 @@ import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import MenuIcon from 'material-ui/svg-icons/navigation/menu';
+import RaisedButton from 'material-ui/RaisedButton';
 
 import DashboardDefault from './DashboardDefault';
 import TopicManager from './TopicManager';
@@ -22,9 +23,15 @@ import TopicChart from './TopicChart';
 
 import LogoutForm from './LogoutForm';
 
+import { sendMessage, subscribeToHeartbeat, joinRoom } from '../actions/utilActions';
+
 class DashboardHome extends React.Component {
   constructor(props){
     super(props);
+
+    // this.renderHeartbeat = this.renderHeartbeat.bind(this);
+    this.joinRoom = this.joinRoom.bind(this);
+
   }
 
   componentDidMount(){
@@ -34,6 +41,10 @@ class DashboardHome extends React.Component {
     }else{
       console.log('User is Authorized');
     }
+
+    this.props.sendMessage();
+    this.props.subscribeToHeartbeat();
+
   }
 
   componentWillReceiveProps(nextProps){
@@ -52,6 +63,36 @@ class DashboardHome extends React.Component {
     this.props.history.push('/dashboard/' + path);
   }
 
+  renderHeartbeat(){
+    // var timestamp = this.props.utils.heartbeat.timestamp;
+    // console.log(this.props.utils.heartbeat.timestamp);
+    if(this.props.utils.heartbeat !== undefined){
+      var timestamp = this.props.utils.heartbeat.timestamp;
+
+      return(
+        <div>
+          {timestamp}
+        </div>
+      )
+    }else{
+      return
+    }
+
+  }
+
+  joinRoom(e){
+    // e.preventDefault();
+
+    console.log(e.currentTarget.value);
+    // console.log(e.target.value);
+    this.props.joinRoom(e.currentTarget.value);
+  }
+
+  // joinRoom2(e){
+  //   e.preventDefault();
+  //   this.props.joinRoom('room2');
+  // }
+
   render(){
     return (
       <div>
@@ -59,6 +100,9 @@ class DashboardHome extends React.Component {
           title='Dashboard'
           showMenuIconButton={false}
           iconClassNameRight='muidocs-icon-naviagtion-expand-more'>
+          <div>
+            {this.renderHeartbeat()}
+          </div>
           <IconMenu
             iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
             anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
@@ -78,6 +122,16 @@ class DashboardHome extends React.Component {
           Email: {this.props.user.data.email} <br />
           <LogoutForm />
         </AppBar>
+        <RaisedButton
+          label='Join Room 1'
+          value='room1'
+          id='room1'
+          onClick={this.joinRoom}/>
+        <RaisedButton
+          label='Join Room 2'
+          value='room2'
+          id='room2'
+          onClick={this.joinRoom}/>
         <Route exact path={`${this.props.match.path}/`} component={DashboardDefault} />
         <Route exact path={`${this.props.match.path}/topics/manage`} component={TopicManager} />
         <Route exact path={`${this.props.match.path}/topics/chart`} component={TopicChart} />
@@ -87,13 +141,16 @@ class DashboardHome extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    user: state.user
+    user: state.user,
+    utils: state.utils
   }
 }
 
 const mapDispatchToProps = dispatch => {
   return {
-
+    sendMessage: bindActionCreators(sendMessage, dispatch),
+    subscribeToHeartbeat: bindActionCreators(subscribeToHeartbeat, dispatch),
+    joinRoom: bindActionCreators(joinRoom, dispatch)
   }
 }
 

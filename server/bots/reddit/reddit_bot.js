@@ -38,7 +38,6 @@ const reddit_bot = {
     comments.on('comment', (comment) => {
       topics.forEach((topic) => {
         if(comment.body.includes(topic)){
-          console.log('TOPIC DETECTED: ', topic);
 
           var query = { name: topic };
 
@@ -59,7 +58,8 @@ const reddit_bot = {
             _id: 0
           })
           .then(res => {
-            console.log(res);
+            // console.log(res);
+            console.log('TOPIC DETECTED: ', topic);
           })
           .catch(err => {
             console.log(err);
@@ -71,7 +71,7 @@ const reddit_bot = {
 
   updateTopics: async () => {
     //grab all the topics from mongo and update our array
-    console.log('REDDIT BOT: updating topics list...');
+    console.log('REDDIT BOT: updating topics list');
 
     var latestTopics = await Topic.find({})
       .then(res => {
