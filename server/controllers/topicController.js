@@ -96,7 +96,6 @@ exports.getAllTopics = async (req, res) => {
       _id: 0
     })
     .then(res => {
-      console.log('------------> ', res);
       return res
     })
     .catch(err => {

@@ -69,7 +69,6 @@ var socketServer = {
     });
 
     setInterval(() => {
-      console.log('sending to rooms');
       // io.sockets.in(room1).emit('message', 'this is for room 1');
       io.sockets.in(room1).emit('action', {
         type: 'message',

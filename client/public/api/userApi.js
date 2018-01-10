@@ -9,7 +9,6 @@ export const userLogin = async (payload) => {
   return new Promise((fulfill, reject) => {
     axios.post(url, payload)
     .then(res => {
-      console.log(res);
       if(!res.data.authorized){
         reject(res);
       }else{

@@ -7,6 +7,8 @@ import {
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
+import styles from '../css/app.css';
+
 class DashboardDefault extends React.Component {
   constructor(props){
     super(props);
@@ -15,18 +17,15 @@ class DashboardDefault extends React.Component {
   }
 
   componentDidMount(){
-    console.log('mounting');
     if(!this.props.user.authorized){
       console.log('User NOT AUTHORIZED, redirect to login page');
       this.props.history.push('/user/login');
-    }else{
-      console.log('User is Authorized');
     }
   }
 
   render(){
     return (
-      <div>
+      <div className={styles.DashboardDefault}>
         Dashboard Default<br />
       </div>)
   }

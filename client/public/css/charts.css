@@ -1,0 +1,15 @@
+.chartContainer {
+  width: 600px;
+  height: 400px;
+  /*background-color: #4A494A;*/
+  background-color: red;
+  /*position: relative;*/
+  overflow: hidden;
+  /* color: white; */
+}
+
+.bar {
+  fill: yellow;
+  stroke: black;
+  stroke-width: .5;
+}

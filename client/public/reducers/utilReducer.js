@@ -6,9 +6,6 @@ function utilReducer(state = initialState, action){
 
     case 'message':
       console.log(action);
-      // return Object.assign({}, {
-      //   message: action.payload
-      // })
       return {
         ...state,
         message: action.payload

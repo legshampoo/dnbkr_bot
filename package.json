@@ -37,6 +37,7 @@
     "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
     "clientjs": "^0.1.11",
+    "d3": "^4.12.2",
     "dotenv": "^4.0.0",
     "es6-promisify": "^5.0.0",
     "express-session": "^1.15.6",

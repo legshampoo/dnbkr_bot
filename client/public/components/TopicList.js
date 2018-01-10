@@ -5,8 +5,11 @@ import { connect } from 'react-redux';
 
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
+import { List, ListItem } from 'material-ui/List';
 
 import { getAllTopics } from '../actions/topicActions';
+
+import styles from '../css/app.css';
 
 class TopicList extends React.Component {
   constructor(props){
@@ -31,7 +34,6 @@ class TopicList extends React.Component {
     let topicList = this.props.topicList;
 
     if(topicList === undefined || topicList === null){
-      console.log('undef')
       return
     }
 
@@ -42,24 +44,29 @@ class TopicList extends React.Component {
       let count = topicList[key].count;
 
       let topic = (
-        <div key={index}>
-          {name} - {count}
-        </div>
+        <ListItem
+          key={index}
+          primaryText={name}>
+        </ListItem>
       )
 
       content.push(topic);
     })
 
     return(
-      <div>
-        {content}
+      <div
+        // className={styles.topicList}
+        >
+        <List>
+          {content}
+        </List>
       </div>
     )
   }
 
   render(){
     return (
-      <div name='topic-list'>
+      <div className={styles.topicList}>
         <h1>Topics</h1>
         {this.renderTopicList()}
       </div>)

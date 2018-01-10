@@ -28,7 +28,6 @@ export const getAllTopics = async (payload) => {
   return new Promise((fulfill, reject) => {
     axios.get(url)
     .then(res => {
-      console.log(res);
       if(res.data.api.success){
         fulfill(res);
       }else{

@@ -4,8 +4,11 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 import TopicList from './TopicList';
+import Chart from './Chart';
 
-class TopicChart extends React.Component {
+import styles from '../css/app.css';
+
+class ChartDashboard extends React.Component {
   constructor(props){
     super(props);
   }
@@ -18,7 +21,12 @@ class TopicChart extends React.Component {
     return (
       <div>
         Topic Chart
-        <TopicList />
+        <div className={styles.chartDashboard}>
+          <TopicList />
+          <div className={styles.responsiveContainer}>
+            <Chart />
+          </div>
+        </div>
       </div>)
   }
 }
@@ -35,4 +43,4 @@ const mapDispatchToProps = dispatch => {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TopicChart);
+export default connect(mapStateToProps, mapDispatchToProps)(ChartDashboard);

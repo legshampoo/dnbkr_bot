@@ -12,10 +12,8 @@ class Login extends React.Component {
 
   componentWillReceiveProps(nextProps){
     if(this.props != nextProps){
-      console.log('new props');
       this.props = nextProps;
       if(this.props.user.authorized){
-        console.log('User is authed');
         this.props.history.push('/dashboard');
       }
     }

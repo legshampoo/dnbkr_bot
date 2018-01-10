@@ -19,7 +19,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 
 import DashboardDefault from './DashboardDefault';
 import TopicManager from './TopicManager';
-import TopicChart from './TopicChart';
+import ChartDashboard from './ChartDashboard';
 
 import LogoutForm from './LogoutForm';
 
@@ -29,7 +29,6 @@ class DashboardHome extends React.Component {
   constructor(props){
     super(props);
 
-    // this.renderHeartbeat = this.renderHeartbeat.bind(this);
     this.joinRoom = this.joinRoom.bind(this);
 
   }
@@ -37,14 +36,10 @@ class DashboardHome extends React.Component {
   componentDidMount(){
     if(!this.props.user.authorized){
       console.log('User NOT AUTHORIZED, redirect to login page');
-      this.props.history.push('/user/login');
-    }else{
-      console.log('User is Authorized');
+      return this.props.history.push('/user/login');
     }
 
-    this.props.sendMessage();
     this.props.subscribeToHeartbeat();
-
   }
 
   componentWillReceiveProps(nextProps){
@@ -58,14 +53,10 @@ class DashboardHome extends React.Component {
   }
 
   handleClick_dropDown(event, path, value){
-    console.log(this.props.match.path);
-    console.log('path: ', path);
     this.props.history.push('/dashboard/' + path);
   }
 
   renderHeartbeat(){
-    // var timestamp = this.props.utils.heartbeat.timestamp;
-    // console.log(this.props.utils.heartbeat.timestamp);
     if(this.props.utils.heartbeat !== undefined){
       var timestamp = this.props.utils.heartbeat.timestamp;
 
@@ -81,17 +72,10 @@ class DashboardHome extends React.Component {
   }
 
   joinRoom(e){
-    // e.preventDefault();
-
     console.log(e.currentTarget.value);
     // console.log(e.target.value);
     this.props.joinRoom(e.currentTarget.value);
   }
-
-  // joinRoom2(e){
-  //   e.preventDefault();
-  //   this.props.joinRoom('room2');
-  // }
 
   render(){
     return (
@@ -122,7 +106,7 @@ class DashboardHome extends React.Component {
           Email: {this.props.user.data.email} <br />
           <LogoutForm />
         </AppBar>
-        <RaisedButton
+        {/* <RaisedButton
           label='Join Room 1'
           value='room1'
           id='room1'
@@ -131,10 +115,10 @@ class DashboardHome extends React.Component {
           label='Join Room 2'
           value='room2'
           id='room2'
-          onClick={this.joinRoom}/>
+          onClick={this.joinRoom}/> */}
         <Route exact path={`${this.props.match.path}/`} component={DashboardDefault} />
         <Route exact path={`${this.props.match.path}/topics/manage`} component={TopicManager} />
-        <Route exact path={`${this.props.match.path}/topics/chart`} component={TopicChart} />
+        <Route exact path={`${this.props.match.path}/topics/chart`} component={ChartDashboard} />
       </div>)
   }
 }
