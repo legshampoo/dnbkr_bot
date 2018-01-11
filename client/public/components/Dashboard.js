@@ -23,13 +23,11 @@ import ChartDashboard from './ChartDashboard';
 
 import LogoutForm from './LogoutForm';
 
-import { sendMessage, subscribeToHeartbeat, joinRoom } from '../actions/utilActions';
+import { sendMessage, subscribeToHeartbeat } from '../actions/utilActions';
 
 class DashboardHome extends React.Component {
   constructor(props){
     super(props);
-
-    this.joinRoom = this.joinRoom.bind(this);
 
   }
 
@@ -71,12 +69,6 @@ class DashboardHome extends React.Component {
 
   }
 
-  joinRoom(e){
-    console.log(e.currentTarget.value);
-    // console.log(e.target.value);
-    this.props.joinRoom(e.currentTarget.value);
-  }
-
   render(){
     return (
       <div>
@@ -106,16 +98,6 @@ class DashboardHome extends React.Component {
           Email: {this.props.user.data.email} <br />
           <LogoutForm />
         </AppBar>
-        {/* <RaisedButton
-          label='Join Room 1'
-          value='room1'
-          id='room1'
-          onClick={this.joinRoom}/>
-        <RaisedButton
-          label='Join Room 2'
-          value='room2'
-          id='room2'
-          onClick={this.joinRoom}/> */}
         <Route exact path={`${this.props.match.path}/`} component={DashboardDefault} />
         <Route exact path={`${this.props.match.path}/topics/manage`} component={TopicManager} />
         <Route exact path={`${this.props.match.path}/topics/chart`} component={ChartDashboard} />
@@ -133,8 +115,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     sendMessage: bindActionCreators(sendMessage, dispatch),
-    subscribeToHeartbeat: bindActionCreators(subscribeToHeartbeat, dispatch),
-    joinRoom: bindActionCreators(joinRoom, dispatch)
+    subscribeToHeartbeat: bindActionCreators(subscribeToHeartbeat, dispatch)
   }
 }
 

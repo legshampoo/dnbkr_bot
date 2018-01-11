@@ -2,6 +2,8 @@
 const io = require('socket.io')();
 const connections = [];
 
+const Topic = require('../models/Topic');
+
 var room1 = 'room1';
 var room2 = 'room2';
 
@@ -20,7 +22,7 @@ var socketServer = {
 
       console.log('SOCKET: new connection from ' + socketIp + ', socket ID: ' + socket.id);
 
-      socket.on('action', (action) => {
+      socket.on('action', async (action) => {
         if(action.type === 'server/hello'){
           console.log('got hello data muhfuh!', action.payload);
           socket.emit('action', { type: 'message', payload: 'good day!' })
@@ -43,22 +45,47 @@ var socketServer = {
         }  //end if
 
         if(action.type === 'server/join_room'){
-          console.log('SOCKET: server/join_room');
-
-          console.log(action.payload);
-
           var room = action.payload;
+          console.log('SOCKET: server/join_room ', room);
 
+          if(socket.room){
+            socket.leave(socket.room);
+          }
+
+          socket.room = room;
           socket.join(room)
 
+          var name = room;
+          var query = { name: name };
+          const topic = await Topic.find(query)
+            .then(res => {
+              // console.log('RES: ');
+              // console.log(res);
+              return res;
+            })
+            .catch(err => {
+              console.log(err);
+              return
+            })
+
+          // topic = topic[0];
+          console.log('topic.name: ', topic[0].name);
+          // console.log('historicalData.length: ', topic.historicalData.length);
+
           var payload = {
-            topic: room,
-            topic_data: 'this is all the data'
+            name: topic[0].name,
+            historicalData: topic[0].historicalData
           }
 
           socket.emit('action', {
             type: 'topic_data',
             payload: payload
+          });
+
+          console.log('SOCKET: Client is now in rooms: ');
+
+          Object.keys(socket.rooms).forEach((room) => {
+            console.log('room: ', room);
           })
         }
       })

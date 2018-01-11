@@ -19,7 +19,7 @@ const topicSchema = new Schema({
     default: Date.now
   },
   historicalData: [{
-      time: Date,
+      time_utc: String,
       author: String,
       comment: String,
       sentiment: Number

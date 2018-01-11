@@ -36,15 +36,20 @@ const reddit_bot = {
     const comments = client.CommentStream(streamOpts);
 
     comments.on('comment', (comment) => {
+      // console.log(comment);
       topics.forEach((topic) => {
         if(comment.body.includes(topic)){
+
+          var convertedDate = new Date(0);
+          convertedDate.setUTCSeconds(comment.created_utc);
+          var time_utc = moment(convertedDate).utc().format('YYYY-MM-DD HH:mm');
 
           var query = { name: topic };
 
           var options = {
             $push: {
               historicalData: {
-                time: comment.created_utc,
+                time_utc: time_utc.toString(),
                 author: comment.author.name,
                 comment: comment.body,
                 sentiment: 0
@@ -53,17 +58,17 @@ const reddit_bot = {
           };
 
           Topic.findOneAndUpdate(query, options)
-          .select({
-            name: 1,
-            _id: 0
-          })
-          .then(res => {
-            // console.log(res);
-            console.log('TOPIC DETECTED: ', topic);
-          })
-          .catch(err => {
-            console.log(err);
-          });
+            .select({
+              name: 1,
+              _id: 0
+            })
+            .then(res => {
+              // console.log(res);
+              console.log('TOPIC DETECTED: ', topic);
+            })
+            .catch(err => {
+              console.log(err);
+            });
         } // end of if statement
       });
     });

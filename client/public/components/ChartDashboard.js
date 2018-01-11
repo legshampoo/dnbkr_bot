@@ -22,7 +22,9 @@ class ChartDashboard extends React.Component {
       <div>
         Topic Chart
         <div className={styles.chartDashboard}>
-          <TopicList />
+          <div className={styles.topicList}>
+            <TopicList />
+          </div>
           <div className={styles.responsiveContainer}>
             <Chart />
           </div>

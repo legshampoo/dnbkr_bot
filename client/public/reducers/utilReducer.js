@@ -21,18 +21,18 @@ function utilReducer(state = initialState, action){
         }
       }
 
-    case 'topic_data':
-      console.log(action);
-
-      return {
-        ...state,
-        topic: action.payload.topic,
-        topicData: action.payload.topicData
-      }
+    // case 'topic_data':
+    //   console.log(action);
+    //
+    //   return {
+    //     ...state,
+    //     topic: action.payload.topic,
+    //     historicalData: action.payload.historicalData
+    //   }
 
     default:
       return state;
   }
 }
 
-export default utilReducer = utilReducer;
+export default utilReducer;

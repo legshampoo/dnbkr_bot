@@ -24,12 +24,12 @@ class Bars extends React.Component {
     const bars = (
       data.map(datum =>
         <rect
-          key={datum.title}
-          x={xScale(datum.title)}
-          y={yScale(datum.value)}
-          height={height - margins.bottom - scales.yScale(datum.value)}
+          key={datum.time}
+          x={xScale(datum.time)}
+          y={yScale(datum.volume)}
+          height={height - margins.bottom - scales.yScale(datum.volume)}
           width={xScale.bandwidth()}
-          fill={this.colorScale(datum.value)}
+          fill={this.colorScale(datum.volume)}
         />
       )
     )

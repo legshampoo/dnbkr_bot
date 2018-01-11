@@ -1,23 +1,83 @@
-import React from 'react';
-// import styles from '../css/app.css';
+import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import {
+  List,
+  ListItem,
+  makeSelectable
+} from 'material-ui/List';
+import Subheader from 'material-ui/Subheader';
 
-import RaisedButton from 'material-ui/RaisedButton';
-import TextField from 'material-ui/TextField';
-import { List, ListItem } from 'material-ui/List';
+import { getAllTopics, joinRoom } from '../actions/topicActions';
 
-import { getAllTopics } from '../actions/topicActions';
+let SelectableList = makeSelectable(List);
 
-import styles from '../css/app.css';
 
-class TopicList extends React.Component {
+function wrapState(ComposedComponent) {
+  return class SelectableList extends Component {
+    constructor(props){
+      super(props);
+      this.handleRequestChange = this.handleRequestChange.bind(this);
+
+      this.state = {
+        // selectedTopic: ''
+      }
+    }
+
+    componentWillMount(){
+      this.setState({
+        // selectedTopic: this.props.defaultTopic
+      });
+    }
+
+    handleRequestChange(e, topicName){
+      console.log(topicName);
+
+      this.setState({
+        selectedTopic: topicName
+      }, () => {
+        console.log('changing room to: ', this.state.selectedTopic)
+        this.props.joinRoom(this.state.selectedTopic);
+      });
+    }
+
+    render(){
+      return (
+        <ComposedComponent
+          value={this.state.selectedTopic}
+          onChange={this.handleRequestChange} >
+          {this.props.children}
+        </ComposedComponent>
+      );
+    }
+  }; //end component
+}
+
+const mapStateToProps = (state, ownProps) => {
+  return {
+    user: state.user,
+    topicList: state.topics.topicList
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+    getAllTopics: bindActionCreators(getAllTopics, dispatch),
+    joinRoom: bindActionCreators(joinRoom, dispatch)
+  }
+}
+
+SelectableList = connect(mapStateToProps, mapDispatchToProps)(wrapState(SelectableList));
+
+
+
+
+
+class ListExampleSelectable extends Component {
   constructor(props){
     super(props);
 
-    this.state = {
 
-    }
   }
 
   componentWillMount(){
@@ -46,6 +106,7 @@ class TopicList extends React.Component {
       let topic = (
         <ListItem
           key={index}
+          value={name}
           primaryText={name}>
         </ListItem>
       )
@@ -54,36 +115,20 @@ class TopicList extends React.Component {
     })
 
     return(
-      <div
-        // className={styles.topicList}
-        >
-        <List>
-          {content}
-        </List>
-      </div>
+      <SelectableList defaultValue={'BTC'}>
+        <Subheader>Topics</Subheader>
+        {content}
+      </SelectableList>
     )
   }
 
   render(){
-    return (
-      <div className={styles.topicList}>
-        <h1>Topics</h1>
+    return(
+      <div>
         {this.renderTopicList()}
-      </div>)
+      </div>
+    )
   }
 }
 
-const mapStateToProps = (state, ownProps) => {
-  return {
-    user: state.user,
-    topicList: state.topics.topicList
-  }
-}
-
-const mapDispatchToProps = dispatch => {
-  return {
-    getAllTopics: bindActionCreators(getAllTopics, dispatch)
-  }
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(TopicList);
+export default connect(mapStateToProps, mapDispatchToProps)(ListExampleSelectable);

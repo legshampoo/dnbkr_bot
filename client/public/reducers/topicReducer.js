@@ -33,6 +33,17 @@ function topicReducer(state = initialState, action){
       console.log(action);
       return state
 
+    case 'topic_data':
+      console.log(action);
+
+      return {
+        ...state,
+        topic: {
+          name: action.payload.name,
+          historicalData: action.payload.historicalData
+        }
+      }
+
     default:
       return state
   }
