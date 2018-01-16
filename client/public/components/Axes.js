@@ -2,35 +2,13 @@ import React from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-import {
-  scaleBand,
-  scaleLinear
-} from 'd3';
-
-import Axis from './Axis';
+// import Axis from './Axis';
+import AxisBottom from './AxisBottom';
+import AxisLeft from './AxisLeft';
 
 class Axes extends React.Component {
   constructor(props){
     super(props);
-
-    const { height, width } = this.props.svgDimensions;
-
-    const margins = this.props.margins;
-    const scales = this.props.scales;
-
-    this.xProps = {
-      orient: 'Bottom',
-      scale: scales.xScale,
-      translate: `translate(0, ${height - margins.bottom})`,
-      tickSize: height - margins.top - margins.bottom
-    }
-
-    this.yProps = {
-      orient: 'Left',
-      scale: scales.yScale,
-      translate: `translate(${margins.left}, 0)`,
-      tickSize: width - margins.left - margins.right
-    }
 
   }
 
@@ -38,32 +16,62 @@ class Axes extends React.Component {
 
   }
 
-  componentDidUpdate(){
-
+  componentWillReceiveProps(nextProps){
+    if(this.props != nextProps){
+      this.props = nextProps;
+    }
   }
 
-  componentWillReceiveProps(nextProps){
+  renderAxes(){
+    const { scales, params, bins } = this.props;
 
+    const width = params.svgDimensions.width;
+    const height = params.svgDimensions.height;
+    const margins = params.margins;
+
+    this.xProps = {
+      orient: 'Bottom',
+      scale: scales.xScale,
+      translate: `translate(0, ${height - margins.bottom})`,
+      tickSize: -3,
+      bins: bins
+    }
+
+    this.yProps = {
+      orient: 'Left',
+      scale: scales.yScale,
+      translate: `translate(${margins.left}, 0)`,
+      tickSize: width - margins.left - margins.right,
+      ticks: params.chart.yAxisTicks
+    }
+
+    return (
+      <g>
+        <AxisLeft {...this.yProps} />
+        <AxisBottom {...this.xProps} />
+      </g>)
   }
 
   render(){
+    // let props = this.props;
+
     return (
       <g>
-        <Axis {...this.xProps} />
-        <Axis {...this.yProps} />
+        {this.renderAxes()}
       </g>)
   }
 }
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    user: state.user
+    user: state.user,
+    topics: state.topics
   }
 }
 
 const mapDispatchToProps = dispatch => {
   return {
-    // userRegister: bindActionCreators(userRegister, dispatch)
+
   }
 }
 

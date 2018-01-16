@@ -44,6 +44,21 @@ function topicReducer(state = initialState, action){
         }
       }
 
+    case 'new_mention_detected':
+      console.log(action);
+
+      var historicalData = state.topic.historicalData;
+
+      historicalData.push(action.payload.data);
+
+      return {
+        ...state,
+        topic: {
+          name: action.payload.name,
+          historicalData: historicalData
+        }
+      }
+
     default:
       return state
   }

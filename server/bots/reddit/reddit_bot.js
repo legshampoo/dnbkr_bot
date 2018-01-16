@@ -1,7 +1,9 @@
 require('dotenv').config({ path: 'variables.env' });
-
+const moment = require('moment');
 const Snoowrap = require('snoowrap');
 const Snoostorm = require('snoostorm');
+
+// const io = require('socket.io')();
 
 const Topic = require('../../models/Topic');
 
@@ -24,7 +26,7 @@ var streamOpts = {
 var topics = [];
 
 const reddit_bot = {
-  init: async () => {
+  init: async (io) => {
     console.log('\n');
     console.log('========================================');
     console.log('REDDIT BOT INIT');
@@ -36,20 +38,21 @@ const reddit_bot = {
     const comments = client.CommentStream(streamOpts);
 
     comments.on('comment', (comment) => {
-      // console.log(comment);
+      // console.log('yerp');
+
       topics.forEach((topic) => {
         if(comment.body.includes(topic)){
-
           var convertedDate = new Date(0);
           convertedDate.setUTCSeconds(comment.created_utc);
-          var time_utc = moment(convertedDate).utc().format('YYYY-MM-DD HH:mm');
+          var time_utc = moment(convertedDate).utc().format('YYYY-MM-DD HH:mm:ss:SSZ');
+          time_utc = time_utc.toString();
 
           var query = { name: topic };
 
           var options = {
-            $push: {
+            $addToSet: {
               historicalData: {
-                time_utc: time_utc.toString(),
+                time_utc: time_utc,
                 author: comment.author.name,
                 comment: comment.body,
                 sentiment: 0
@@ -57,14 +60,27 @@ const reddit_bot = {
             }
           };
 
-          Topic.findOneAndUpdate(query, options)
+          Topic.findOneAndUpdate(query, options, { new: true })
             .select({
-              name: 1,
-              _id: 0
+              _id: 0,
+              created: 0,
+              historicalData: {
+                $slice: -1
+              }
             })
             .then(res => {
-              // console.log(res);
-              console.log('TOPIC DETECTED: ', topic);
+              // console.log('New Topic Detection: ', topic);
+              var newTopicDetected = res.historicalData[0];
+
+              var payload = {
+                name: res.name,
+                data: newTopicDetected
+              }
+
+              io.to(topic).emit('action', {
+                type: 'new_mention_detected',
+                payload: payload
+              });
             })
             .catch(err => {
               console.log(err);
@@ -97,10 +113,6 @@ const reddit_bot = {
     topics = keywords;
 
     return
-  },
-
-  testQuery: async () => {
-
   }
 }
 

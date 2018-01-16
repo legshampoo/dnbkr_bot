@@ -1,5 +1,4 @@
 import React from 'react';
-// import styles from '../css/app.css';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
@@ -10,26 +9,24 @@ class Bars extends React.Component {
   constructor(props){
     super(props);
 
-    this.colorScale = scaleLinear()
-      .domain([0, this.props.maxValue])
-      .range(['#F3E55F5', '#7B1FA2'])
-      .interpolate(interpolateLab)
   }
 
   render(){
-    const { scales, margins, data, svgDimensions } = this.props;
+    const { scales, margins, bins, svgDimensions, chart } = this.props;
     const { xScale, yScale } = scales;
     const { height } = svgDimensions;
 
+
     const bars = (
-      data.map(datum =>
+      bins.map(datum =>
+        //datum.length is the topic volume
         <rect
-          key={datum.time}
-          x={xScale(datum.time)}
-          y={yScale(datum.volume)}
-          height={height - margins.bottom - scales.yScale(datum.volume)}
-          width={xScale.bandwidth()}
-          fill={this.colorScale(datum.volume)}
+          key={datum.x0}
+          x={xScale(datum.x0)}
+          y={yScale(datum.length)}
+          height={height - margins.bottom - scales.yScale(datum.length)}
+          width={chart.barWidth}
+          fill={chart.barColor}
         />
       )
     )
@@ -42,7 +39,8 @@ class Bars extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    user: state.user
+    user: state.user,
+    topics: state.topics
   }
 }
 

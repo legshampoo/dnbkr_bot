@@ -2,14 +2,13 @@ import React, { Component } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-import * as d3Axis from 'd3-axis';
-import {
-  select as d3Select
-} from 'd3-selection';
+import * as d3 from 'd3';
 
 class Axis extends Component {
   constructor(props){
     super(props);
+
+    this.renderAxis = this.renderAxis.bind(this);
 
   }
 
@@ -17,29 +16,29 @@ class Axis extends Component {
     this.renderAxis();
   }
 
-  componentDidUpdate(){
-    this.renderAxis();
-  }
-
   componentWillReceiveProps(nextProps){
-
+    if(this.props != nextProps){
+      this.props = nextProps;
+      this.renderAxis();
+    }
   }
 
   renderAxis(){
-    const axisType = `axis${this.props.orient}`
-    const axis = d3Axis[axisType]()
-      .scale(this.props.scale)
-      .tickSize(-this.props.tickSize)
-      .tickPadding([12])
-      .ticks([4]);
+    const { scale } = this.props;
 
-    d3Select(this.axisElement).call(axis);
+    var axis = d3.axisLeft()
+      .scale(scale)
+      .ticks(this.props.ticks)
+      .tickSize(-this.props.tickSize);
+
+    const svg = d3.select(this.axisElement);
+
+    svg.call(axis);
   }
 
   render(){
     return (
       <g
-        className={`Axis Axis-${this.props.orient}`}
         ref={(el) => { this.axisElement = el; }}
         transform={this.props.translate}
       />)
@@ -48,7 +47,8 @@ class Axis extends Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    user: state.user
+    user: state.user,
+    topics: state.topics
   }
 }
 

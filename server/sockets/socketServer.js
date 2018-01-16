@@ -1,20 +1,16 @@
 
-const io = require('socket.io')();
-const connections = [];
-
+// const io = require('socket.io')();
+var logger = require('tracer').colorConsole();
 const Topic = require('../models/Topic');
+const gdax_bot = require('../bots/trading/gdax/gdax_bot');
 
-var room1 = 'room1';
-var room2 = 'room2';
+var connections = [];
 
 var socketServer = {
-  init: (server) => {
 
-    var options = {};
+  init: (io) => {
 
-    io.listen(server, options);
-
-    console.log('SOCKET: listening on port ', server.address().port);
+    logger.info('Socket server started');
 
     io.on('connection', (socket) => {
       connections.push(socket);
@@ -48,9 +44,9 @@ var socketServer = {
           var room = action.payload;
           console.log('SOCKET: server/join_room ', room);
 
-          if(socket.room){
-            socket.leave(socket.room);
-          }
+          // if(socket.room){
+          //   socket.leave(socket.room);  //need to make an '/leave room endpoint'
+          // }
 
           socket.room = room;
           socket.join(room)
@@ -87,6 +83,21 @@ var socketServer = {
           Object.keys(socket.rooms).forEach((room) => {
             console.log('room: ', room);
           })
+        }//END IF
+
+        if(action.type === 'server/cancel_all_orders'){
+          console.log('CANCEL ALL ORDERS AHHHHH');
+          gdax_bot.cancelAllOrders();
+        }
+
+        if(action.type === 'server/execute_market_buy'){
+          console.log('EXECUTE MARKET BUY');
+          gdax_bot.executeMarketBuy();
+        }
+
+        if(action.type === 'server/execute_market_sell'){
+          console.log('EXECUTE MARKET SELL');
+          gdax_bot.executeMarketSell();
         }
       })
     });
@@ -94,22 +105,6 @@ var socketServer = {
     io.on('disconnect', () => {
       console.log('SOCKET: disconnected ', socket.id);
     });
-
-    setInterval(() => {
-      // io.sockets.in(room1).emit('message', 'this is for room 1');
-      io.sockets.in(room1).emit('action', {
-        type: 'message',
-        payload: 'this is for room 1'
-
-      });
-      // io.sockets.in(room2).emit('message', 'this is for room 2');
-      io.sockets.in(room2).emit('action', {
-        type: 'message',
-        payload: 'this is for room 2'
-
-      });
-    }, 2000);
-
   }
 }
 

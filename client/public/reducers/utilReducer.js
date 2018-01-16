@@ -21,15 +21,6 @@ function utilReducer(state = initialState, action){
         }
       }
 
-    // case 'topic_data':
-    //   console.log(action);
-    //
-    //   return {
-    //     ...state,
-    //     topic: action.payload.topic,
-    //     historicalData: action.payload.historicalData
-    //   }
-
     default:
       return state;
   }

@@ -4,6 +4,12 @@ import { connect } from 'react-redux';
 
 const _ = require('lodash');
 const moment = require('moment');
+import {
+  scaleBand,
+  scaleLinear
+} from 'd3-scale';
+
+import * as d3 from 'd3';
 
 import styles from '../css/app.css';
 
@@ -12,164 +18,175 @@ import Bars from './Bars';
 
 import ResponsiveWrapper from './ResponsiveWrapper';
 
-import {
-  scaleBand,
-  scaleLinear
-} from 'd3-scale';
-
-import * as d3 from 'd3';
 
 class Chart extends Component {
   constructor(props){
     super(props);
 
     this.renderChart = this.renderChart.bind(this);
-    this.formatData = this.formatData.bind(this);
-
-    this.xScale = scaleBand();
-    this.yScale = scaleLinear();
-
+    this.prepData = this.prepData.bind(this);
+    this.setTimeInterval = this.setTimeInterval.bind(this);
   }
 
   componentDidMount(){
+    this.renderChart();
+  }
 
+  componentWillMount(){
+    // this.renderChart();
   }
 
   componentWillReceiveProps(nextProps){
     if(this.props != nextProps){
       this.props = nextProps;
+      this.renderChart();
     }
   }
 
-  formatData(){
-    console.log('formatting data');
+  setTimeInterval(){
+    switch(this.props.timeInterval){
+      case 'minute':
+        console.log('its a minute');
+        return d3.timeMinute;
+        break;
+      case 'hour':
+        console.log('hourz');
+        return d3.timeHour;
+        break;
+      case 'day':
+        console.log('dayz');
+        return d3.timeDay;
+        break;
+      case 'week':
+        console.log('week');
+        return d3.timeWeek;
+        break;
+      default:
+        console.log('default');
+        return d3.timeDay;
+        break;
+    }
+  }
+
+  prepData(){
+
     if(this.props.topics.topic === undefined){
       console.log('no topic data yet');
-      return
+      return (
+        <div>
+          no topic selected yo
+        </div>
+      )
     }
 
-    const d = this.props.topics.topic;
-    const dates = d.historicalData;
+    const topic = this.props.topics.topic;
+    const historicalData = topic.historicalData;
 
-    const groups = _(dates)
-      .groupBy(v => moment(v.time_utc).utc().format('HH'))
-      .mapValues(v => _.map(v, 'time_utc'))
-      .value();
-
-    console.log('groups:');
-    console.log(groups);
-
-    var finalData = {};
-    var finalData = [];
-
-    Object.keys(groups).forEach((key, index) => {
-      var groupTotal = 0;
-      groups[key].forEach(item => {
-        // console.log(item);
-        groupTotal++;
-      })
-      // console.log('new group, total: ', groupTotal);
-      console.log('MONGOTIME: ', groups[key][0]);
-      var mongoTime = new Date(groups[key][0]);
-      var formatTime = d3.timeFormat('%B %d %H:%M %p, %Y');
-      var time_interval = formatTime(mongoTime);
-      console.log('time_interval: ', time_interval);
-
-      var entry = {
-        // time: groups[key][0].time_utc,
-        time: time_interval,
-        volume: groupTotal
-      }
-
-      finalData.push(entry);
+    var map = historicalData.map((item) => {
+      return new Date(item.time_utc);
     });
 
-    return finalData;
+    return map;
   }
 
+
   renderChart(){
-    // var data = [
-    //   { time: '1', volume: 10 },
-    //   { time: '2', volume: 5 },
-    //   { time: '3', volume: 6 },
-    //   { time: '4', volume: 24 },
-    //   { time: '5', volume: 12 },
-    // ]
-    var data = this.formatData();
+
+    if(this.props.topics.topic === undefined){
+      console.log('no topic data yet');
+      return (
+        <div>
+          no topic selected
+        </div>
+      )
+    }
+
+    var data = this.prepData();
+
+    const topic = this.props.topics.topic;
+    const historicalData = topic.historicalData;
 
     if(data === undefined){
-      console.log('not ready yet');
+      console.log('Data not in redux store...');
       return
     }
 
-    var margins = {
-      bottom: 100,
-      left: 60,
-      right: 20,
-      top: 50
+    var timeInterval = this.setTimeInterval();
+
+    var params = {
+      timeIntervals: timeInterval,
+      svgDimensions: {
+        width: Math.max(this.props.parentWidth, 400),
+        height: 500
+      },
+      margins: {
+        bottom: 100,
+        left: 60,
+        right: 20,
+        top: 10
+      },
+      chart: {
+        padding: {
+          top: 10
+        },
+        barWidth: 1,
+        barColor: '#848484',
+        yAxisTicks: 7
+      }
     }
 
-    const svgDimensions = {
-      width: Math.max(this.props.parentWidth, 400),
-      height: 500
-    }
+    var minDate = new Date(2018, 0, 11);
+    var maxDate = Date.now();
+    var rangeStart = params.margins.left;
+    var rangeEnd = params.svgDimensions.width - params.margins.right;
 
-    const maxValue = Math.max(...data.map(d => d.volume));
+    const xScale = d3.scaleTime()
+      .domain([minDate, maxDate])
+      .range([rangeStart, rangeEnd]);
 
-    const xScale = this.xScale
-      .padding(0.5)
-      .domain(data.map(d => d.time))
-      .range([margins.left, svgDimensions.width - margins.right]);
+    var histogram = d3.histogram()
+      .value(function(d) { return d })
+      .domain(xScale.domain())
+      .thresholds(xScale.ticks(params.timeIntervals));
 
-    const yScale = this.yScale
-      .domain([0, maxValue])
-      .range([svgDimensions.height - margins.bottom, margins.top]);
+    var bins = histogram(data);
+    var barWidth = (rangeEnd - rangeStart) / bins.length;
+    params.chart.barWidth = barWidth;
+    var values = [];
+    bins.forEach(bin => {
+      values.push(bin.length);
+    });
+
+    const maxVolume = d3.max(values);
+    const yScaleMax = maxVolume + (maxVolume * .1); //add 10% margin at top
+
+    var yScale = d3.scaleLinear()
+      .domain([0, yScaleMax])
+      .range([params.svgDimensions.height - params.margins.bottom, params.margins.top]);
+
+    const maxValue = Math.max(...bins.map(d => d.length)) + params.chart.padding.top;
 
     return(
       <svg
-        width={svgDimensions.width}
-        height={svgDimensions.height}>
+        width={params.svgDimensions.width}
+        height={params.svgDimensions.height}>
           <Axes
+            params={params}
             scales={{ xScale, yScale }}
-            margins={margins}
-            svgDimensions={svgDimensions} />
+            bins={bins}
+            />
           <Bars
             scales={{ xScale, yScale }}
-            margins={margins}
-            data={data}
+            margins={params.margins}
+            bins={bins}
             maxValue={maxValue}
-            svgDimensions={svgDimensions} />
+            svgDimensions={params.svgDimensions}
+            chart={params.chart} />
         </svg>
     )
   }
 
   render(){
-    // const data = this.props.topics.topic;
-
-    // var margins = {
-    //   bottom: 100,
-    //   left: 60,
-    //   right: 20,
-    //   top: 50
-    // }
-    //
-    // const svgDimensions = {
-    //   width: Math.max(this.props.parentWidth, 400),
-    //   height: 500
-    // }
-    //
-    // const maxValue = Math.max(...this.data.map(d => d.value));
-    //
-    // const xScale = this.xScale
-    //   .padding(0.5)
-    //   .domain(this.data.map(d => d.title))
-    //   .range([margins.left, svgDimensions.width - margins.right]);
-    //
-    // const yScale = this.yScale
-    //   .domain([0, maxValue])
-    //   .range([svgDimensions.height - margins.bottom, margins.top]);
-
-
     return (
       <div className={styles.chart}>
         {this.renderChart()}
@@ -191,6 +208,3 @@ const mapDispatchToProps = dispatch => {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResponsiveWrapper(Chart));
-// const ChartConnected = connect(mapStateToProps, mapDispatchToProps)(Chart);
-
-// export default ResponsiveWrapper(Chart);

@@ -20,6 +20,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import DashboardDefault from './DashboardDefault';
 import TopicManager from './TopicManager';
 import ChartDashboard from './ChartDashboard';
+import GdaxTradeBot from './GdaxTradeBot';
 
 import LogoutForm from './LogoutForm';
 
@@ -93,6 +94,9 @@ class DashboardHome extends React.Component {
             <MenuItem
               primaryText='Topic Chart'
               value='topics/chart' />
+            <MenuItem
+              primaryText='GDAX Trade Bot'
+              value='trade/gdax_tradebot' />
           </IconMenu>
           Name: {this.props.user.data.name} <br />
           Email: {this.props.user.data.email} <br />
@@ -101,6 +105,7 @@ class DashboardHome extends React.Component {
         <Route exact path={`${this.props.match.path}/`} component={DashboardDefault} />
         <Route exact path={`${this.props.match.path}/topics/manage`} component={TopicManager} />
         <Route exact path={`${this.props.match.path}/topics/chart`} component={ChartDashboard} />
+        <Route exact path={`${this.props.match.path}/trade/gdax_tradebot`} component={GdaxTradeBot} />
       </div>)
   }
 }

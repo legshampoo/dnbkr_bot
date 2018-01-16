@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');  //middleware used for validating data before entering into mongodb
 const historyApiFallback = require('connect-history-api-fallback');
+var logger = require('tracer').colorConsole();
 
 // const session = require('express-session');  //manages sessions
 const mongoose = require('mongoose');  //interface for mongodb
@@ -11,9 +12,14 @@ const passport = require('passport');
 const session = require('express-session');
 // const MongoStore = require('connect-mongo')(session);
 
+const io = require('socket.io')();
 const socketServer = require('./server/sockets/socketServer');
+
+// const socketServer = require('./server/sockets/socketServer');
 //START BOTS
 const reddit_bot = require('./server/bots/reddit/reddit_bot');
+const gdax_market_feed = require('./server/bots/trading/gdax/gdax_market_feed');
+const gdax_bot = require('./server/bots/trading/gdax/gdax_bot');
 
 const database = require('./server/database/database');
 
@@ -92,6 +98,10 @@ app.get('*', (req, res) => {
 const server = app.listen(app.get('port'), '0.0.0.0', function () {
   console.log('Server listening on port ' + app.get('port') + '!\n');
   database.init();
-  reddit_bot.init();
-  socketServer.init(server);
+  io.listen(server);
+
+  socketServer.init(io);
+  reddit_bot.init(io);
+  gdax_market_feed.init(io);
+  gdax_bot.init(io);
 });

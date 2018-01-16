@@ -1,6 +1,7 @@
 
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;  //tell mongoose to use ES6 promises
+var logger = require('tracer').colorConsole();
 
 const mongoTest = require('./mongoTest');
 
@@ -10,24 +11,28 @@ require('../handlers/passport');
 
 var database = {
   init: () => {
-    console.log('DATABASE: initializing connection...');
+    logger.log('DATABASE: initializing connection...');
 
     mongoose.connect(process.env.DATABASE, {})
     .then(() => {
-      console.log('DATABASE: Conected');
-      // test();
+      logger.log('DATABASE: Connected to mongodb');
+      //run mongo test here
+      // database.test();
+      //
     })
     .catch(err => {
       console.log(err);
     });
 
     mongoose.connection.on('error', (err) => {
-      console.log('Mongoose connection error', err.message);
+      logger.error('Mongoose connection error', err.message);
     });
   },
 
   test: () => {
-    mongoTest.findOneAndUpdate();
+    // mongoTest.findOneAndUpdate();
+    // mongoTest.saveDuplicateData();
+    mongoTest.returnLatestEntry();
   }
 
 }

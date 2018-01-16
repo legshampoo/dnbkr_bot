@@ -19,14 +19,26 @@ const topicSchema = new Schema({
     default: Date.now
   },
   historicalData: [{
-      time_utc: String,
-      author: String,
-      comment: String,
-      sentiment: Number
+    _id: false,
+    time_utc: {
+      type: String,
+      required: true
+    },
+    author: String,
+    comment: String,
+    sentiment: Number
   }]
 });
 
 topicSchema.pre('save', function(next){
+  var self = this;
+
+  next();
+})
+
+topicSchema.pre('findOneAndUpdate', function(next){
+  var self = this;
+
 
   next();
 })

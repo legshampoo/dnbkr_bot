@@ -1,5 +1,7 @@
 require('dotenv').config({ path: 'variables.env' });
+const path = require('path');
 
+var backup = require('backup-mongodb');
 const seeder = require('mongoose-seed');
 
 const sample_data = require('./sample_data');
@@ -7,15 +9,24 @@ const sample_data = require('./sample_data');
 const User = require('../models/User');
 const Topic = require('../models/Topic');
 
-var seedOperations = {
+var migrations = {
 
-  init: () => {
-    console.log('seeder init');
+  run: () => {
+    console.log('Migrations: ');
 
-    seedOperations.clear_all_data();
+    for(var i = 0; i < process.argv.length; i++){
+      switch(process.argv[i]){
+        case 'drop_all':
+          console.log('drop all');
+          break;
+        case 'backup':
+          migrations.backup();
+          break;
+      }
+    }
   },
 
-  clear_all_data: () => {
+  drop_all: () => {
     console.log('clearing all data');
     var testDate = new Date(Date.UTC(2018, 1, 1, 0, 0, 0));
     console.log(testDate);
@@ -40,10 +51,19 @@ var seedOperations = {
         });
       });
     });
+  },
 
+  backup: () => {
+
+    console.log('BACKING UP DATABASE...');
+
+    var basePath = path.resolve(__dirname, './backup');
+
+    new backup(process.env.DATABASE, basePath).backup(() => {
+      console.log('BACKUP COMPLETE');
+      process.exit();
+    })
   }
 }
 
-seedOperations.init();
-
-// module.exports = seeder;
+migrations.run();

@@ -8,6 +8,8 @@ import {
 } from 'material-ui/List';
 import Subheader from 'material-ui/Subheader';
 
+import styles from '../css/app.css';
+
 import { getAllTopics, joinRoom } from '../actions/topicActions';
 
 let SelectableList = makeSelectable(List);
@@ -44,6 +46,8 @@ function wrapState(ComposedComponent) {
     render(){
       return (
         <ComposedComponent
+          className={styles.topicList}
+          style={{ overflow: 'auto'}}
           value={this.state.selectedTopic}
           onChange={this.handleRequestChange} >
           {this.props.children}
@@ -99,9 +103,16 @@ class ListExampleSelectable extends Component {
 
     var content = [];
 
+    // _.orderBy(topicList, 'name', 'asc');
+    topicList = _.sortBy(topicList, (o) => {
+      return o.name
+    });
+
+    console.log(topicList);
+
     Object.keys(topicList).map((key, index) => {
       let name = topicList[key].name;
-      let count = topicList[key].count;
+      // let count = topicList[key].count;
 
       let topic = (
         <ListItem
@@ -114,8 +125,10 @@ class ListExampleSelectable extends Component {
       content.push(topic);
     })
 
+
+
     return(
-      <SelectableList defaultValue={'BTC'}>
+      <SelectableList>
         <Subheader>Topics</Subheader>
         {content}
       </SelectableList>
