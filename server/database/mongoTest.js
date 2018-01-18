@@ -1,5 +1,6 @@
 const moment = require('moment');
 const Topic = require('../models/Topic');
+const Order = require('../models/Order');
 
 var utils = {
 
@@ -114,6 +115,42 @@ var utils = {
       .catch(err => {
         console.log(err);
       });
+  },
+
+  saveOrder: async () => {
+    console.log('TEST SAVE ORDER');
+    var time = moment().format('YYYY-MM-DD HH:mm:ss');
+
+    var payload = {
+      action: 'TEST_ORDER',
+      time: time.toString(),
+      size: .00000001,
+      price: 00000,
+      exchange: 'Exchange',
+      pair: 'Pair'
+    }
+
+    const order = new Order({
+      order: payload.action,
+      time: payload.time.toString(),
+      size: payload.size,
+      price: payload.price,
+      exchange: payload.exchange,
+      pair: payload.pair
+    });
+
+    order.save()
+      .then(res => {
+        console.log('GDAX BOT: Market order saved to database');
+        console.log('TYPE: ', payload.action);
+        return
+      })
+      .catch(err => {
+        console.log('GDAX BOT: Error saving order to mongodb');
+        console.log(err);
+        return
+      })
+
   }
 
 }

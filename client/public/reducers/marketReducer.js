@@ -46,8 +46,38 @@ function marketReducer(state = initialState, action){
         accounts: accounts
       }
 
+    case 'macd':
+      console.log(action);
+
+      let macd = action.payload.macd;
+
+      return {
+        ...state,
+        macd: macd
+      }
+
+    case 'historical_data':
+      console.log(action);
+
+      return {
+        ...state,
+        historicalData: action.payload.historicalData
+      }
+
+    case 'trade_decision':
+      console.log(action);
+
+      return {
+        ...state,
+        marketDecisions: {
+          ...action.payload
+        }
+      }
+
     default:
       return state
+
+
   }
 }
 

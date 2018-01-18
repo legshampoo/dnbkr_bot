@@ -7,6 +7,12 @@ var logger = require('tracer').colorConsole();
 const axios = require('axios');
 const moment = require('moment');
 
+const MACD = require('technicalindicators').MACD;
+const SMA = require('technicalindicators').SMA;
+
+const _macd = require('macd');
+
+
 const gdax_bot = require('./gdax_bot');
 
 const BTC_USD = 'BTC-USD';
@@ -26,146 +32,191 @@ const GDAXAuthConfig = {
   }
 }
 
-const base = 'https://api.gdax.com';
+const base = process.env.GDAX_BASE;
 
 var prev_longEMA = 0;
 var prev_shortEMA = 0;
 
 var prevEMA = 0;  //used as a temp var
-var pollingRate = 60 * 1000;  //get from server every 60 seconds
+
+const fastPeriod = 12;
+const slowPeriod = 26;
+const signalPeriod = 9;
+const binDuration = 1;  //in minutes
+const MACD_pollingRate = 10 * 1000;
+var historicalData = [];
 
 var marketData = {
+
   init: async (io) => {
 
     console.log('Market Feed: init');
 
+    marketData.initDataFeeds(io);
+
+  },
+
+  initDataFeeds: (io) => {
     marketData.initTickerFeed(io);
-    marketData.initEMA(io);
+    marketData.updateMACD(io);  //one once to fill latest data
 
-  },
-
-  initEMA: () => {
-    marketData.updateEMA();  //one once to fill latest data
-
-    setInterval(async (io) => {
+    setInterval(() => {
+      console.log('\n\n\n');
+      console.log('Updating MACD');
       console.log('\n');
-      console.log('---------------------------------')
-      console.log('Getting market data from gdax...');
-      marketData.updateEMA();
-    }, pollingRate);
+      marketData.updateMACD(io);
+    }, MACD_pollingRate);
   },
 
-  updateEMA: async () => {
-    var historicalData = await marketData.getHistoricalData(BTC_USD, 1, 26);  //pair, minutes, numBins
-    var longEMA = marketData.calculateEMA(historicalData, 26);  //intervals to calculate against
-    var shortEMA = marketData.calculateEMA(historicalData, 9);
-    marketData.applyLogic(longEMA, shortEMA);
-  },
+  updateMACD: async (io) => {
+    // console.log('getting historical data');
 
-  calculateEMA: (data, intervals) => {
-    var currentData = data[0];
+    var data = await marketData.getHistoricalData(BTC_USD, binDuration);  //pair, minutes
 
-    var currentTime = moment(currentData[0]).format('YYYY-MM-DD HH:mm:ss');
-    var currentPrice = currentData[4];
+    marketData.emitHistoricalData(data, io);
 
-    if(prevEMA === 0){
-      prevEMA = marketData.calculateSimpleAverage(data, intervals);
+    if(historicalData.length === 0){
+      //if its the first pass, fill the whole array
+      historicalData = data;
+    }else{
+      var currentTimeBlock = historicalData[0][0];
+      var newTimeBlock = data[0][0];
+
+      if(currentTimeBlock !== newTimeBlock){
+        console.log('NEW DATA ADDED TO MACD');
+        historicalData.unshift(data[0]);
+      }else{
+        //do nothing, no new data
+        // console.log('no new data yet');
+      }
     }
 
-    var EMA = (currentPrice * (2 / (1 + intervals))) + (prevEMA * (1 - (2 / (1 + intervals))));
+    var values = [];
+    var times = [];
+    historicalData.forEach((item) => {
+      var close = item[4];
+      var convertedDate = new Date(0);
+      convertedDate.setUTCSeconds(item[0]);
+      var time = moment(convertedDate).local().format('YYYY-MM-DD HH:mm:ss:SS');
 
-    return EMA;
+      times.push(time);
+      values.push(close);
+    })
+
+    values.reverse();
+
+    var macdInput = {
+      values: values,
+      fastPeriod: fastPeriod,
+      slowPeriod: slowPeriod,
+      signalPeriod: signalPeriod,
+      SimpleMAOscillator: false,
+      SimpleMASignal: false
+    }
+
+    var macd = MACD.calculate(macdInput);
+
+    var payload = {
+      exchange: 'GDAX',
+      pair: BTC_USD,
+      macd: macd
+    };
+
+    marketData.decision(macd, io);
+
+    io.to('market_feed').emit('action', {
+      type: 'macd',
+      payload: payload
+    });
+
   },
 
-  applyLogic: (longEMA, shortEMA, io) => {
+  decision: (macd, io) => {
+    var previousHistogramValue = macd[macd.length - 2].histogram;
+    var histogramValue = macd[macd.length - 1].histogram;
+
+    var TRADE_DECISION = '';
+    var TREND = '';
+
+    if(previousHistogramValue < 0){
+      if(histogramValue > 0){
+        console.log('TREND: CHANGE - GOING UP - BUY');
+        
+        TRADE_DECISION = 'BUY';
+        TREND = 'TURNING UP'
+
+        gdax_bot.executeMarketBuy(io);
+      }else{
+        TRADE_DECISION = 'DO_NOTHING';
+        TREND = 'DOWN';
+      }
+    }
+    if(previousHistogramValue > 0){
+      if(histogramValue < 0){
+        console.log(moment().format('YYYY-MM-DD HH:mm:ss'));
+        console.log('TREND: CHANGE - GOING DOWN - SELL');
+
+        TRADE_DECISION = 'SELL';
+        TREND = 'TURNING DOWN';
+
+        gdax_bot.executeMarketSell(io);
+      }else{
+        TRADE_DECISION = 'DO NOTHING';
+        TREND = 'UP';
+      }
+    }
+
     var currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+    var price = gdax_bot.BTC_USD_PRICE;
 
-    if(prev_longEMA === 0 || prev_shortEMA === 0){
-      logger.info('Market: first pass, storing previous market data')
-      prev_longEMA = longEMA;
-      prev_shortEMA = shortEMA;
-      console.log('DO NOTHING');
-      gdax_bot.update('DO_NOTHING');
-      return
+    var payload = {
+      time: currentTime,
+      currentPrice: price,
+      trade_decision: TRADE_DECISION,
+      trend: TREND
     }
 
-    if(prev_shortEMA < prev_longEMA){
-      if(shortEMA > longEMA){
-        console.log('\n')
-        console.log('Time: ', Date.now());
-        console.log('Short EMA: ' + shortEMA + ' is now greater than ');
-        console.log('Long EMA: ' + longEMA);
-        console.log('BUY IT UP YO!');
-        console.log('BUY IT UP YO!');
-        console.log('BUY IT UP YO!');
-        console.log('\n');
+    io.to('market_feed').emit('action', {
+      type: 'trade_decision',
+      payload: payload
+    })
+  },
 
-        // var currentTime = Date.now();
-        var payload = {
-          command: 'BUY',
-          time: currentTime,
-          data: {
-            trend: 'begin trend up! buy buy buy',
-            shortEMA: shortEMA,
-            longEMA: longEMA
-          }
-        }
+  emitHistoricalData: (d, io) => {
+    var values = [];
+    d.forEach((item) => {
+      var convertedDate = new Date(0);
+      convertedDate.setUTCSeconds(item[0]);
+      var time = moment(convertedDate).local().format('YYYY-MM-DD HH:mm:ss:SS');
 
-        gdax_bot.update(payload);
-
-        //this is where we send to client and tell bot what to do
-      }else{
-        console.log('Market: Trending down, do nothing');
-        var payload = {
-          command: 'DO_NOTHING',
-          time: currentTime,
-          data: {
-            trend: 'down, do nothing',
-            shortEMA: shortEMA,
-            longEMA: longEMA
-          }
-        }
-        gdax_bot.update(payload);
+      var entry = {
+        time: time,
+        low: item[1],
+        high: item[2],
+        open: item[3],
+        close: item[4],
+        volume: item[5]
       }
-    }
+      values.push(entry);
+    });
 
-    if(prev_shortEMA > prev_longEMA){
-      // var currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
-      if(shortEMA < longEMA){
-        console.log('\n');
-        console.log('Time: ', currentTime);
-        console.log('Short EMA: ' + shortEMA + ' is now less than ');
-        console.log('Long EMA: ' + longEMA);
-        console.log('SELL SELL SELL');
-        console.log('\n');
-        //this is where we send to client and tell bot what to do
-        var payload = {
-          command: 'SELL',
-          time: currentTime,
-          data: {
-            trend: 'begin trend down',
-            shortEMA: shortEMA,
-            longEMA: longEMA
-          }
-        }
-        gdax_bot.update(payload);
-      }else{
-        // console.log('Market: Trending up, HODL');
-        var payload = {
-          command: 'DO_NOTHING',
-          time: currentTime,
-          data: {
-            trend: 'up, just HODL',
-            shortEMA: shortEMA,
-            longEMA: longEMA
-          }
-        }
-        gdax_bot.update(payload);
-      }
-    }
+    //-----
+    //  NEED TO REVERSE DATA FOR RECHARTS
+    //-----
+    values.reverse();
 
-    prev_shortEMA = shortEMA;
-    prev_longEMA = longEMA;
+    var payload = {
+      exchange: 'GDAX',
+      pair: BTC_USD,
+      historicalData: values
+    };
+
+    // console.log('emit historical data');
+
+    io.to('market_feed').emit('action', {
+      type: 'historical_data',
+      payload: payload
+    });
   },
 
   getGdaxServerTime: () => {
@@ -188,21 +239,6 @@ var marketData = {
     })
   },
 
-  calculateSimpleAverage: (data, intervals) => {
-    var total = 0;
-    data.forEach((entry, index) => {
-      if(index > intervals - 1){
-        return;
-      }
-
-      total += entry[4];
-    });
-
-    var avg = total / intervals;
-
-    return avg
-  },
-
   initTickerFeed: (io) => {
     GTT_logger.info('GDAX Market Feed Init');
 
@@ -218,6 +254,7 @@ var marketData = {
           price = parseFloat(price).toFixed(2);
 
           gdax_bot.BTC_USD_PRICE = price;
+          // console.log('PRICE: ', price);
 
           var payload = {
             exchange: 'GDAX',
@@ -253,42 +290,36 @@ var marketData = {
     })
   },
 
-  getHistoricalData: async (pair, binLength, numBins) => {
+  getHistoricalData: async (pair, binLength) => {
     //gets the historical data, binLength is in minutes
-    //going back 26 intervals
-    // console.log('Market: ', pair);
     logger.info('Market: Getting historical data for ' + pair + ' market on Gdax');
 
-    const binSize = binLength * 60;
+    // const granularity = binLength * 60;  //binlength is in minutes
+    const granularity = 60;
 
     const path = '/products/' + pair + '/candles';
 
     const url = base + path;
 
-    var endDate = moment().utc();
-
-    // var longHistory = (5 * 60) * 26;
-    var numIntervals = binSize * numBins;
-    var startDate = endDate.clone().subtract(numIntervals, 'seconds');
-
-    // console.log('startDate: ', startDate);
-    // console.log('  endDate: ', endDate);
+    // var endDate = moment().utc();
+    // var historyLength = 26 * granularity;
+    // var startDate = endDate.clone().subtract(historyLength, 'seconds');
 
     return new Promise((fulfill, reject) => {
       axios.get(url, {
-        params: {
-          start: startDate.toISOString(),
-          end: endDate.toISOString(),
-          granularity: binSize
-        }
-      })
+          params: {
+            // start: startDate.toISOString(),
+            // end: endDate.toISOString(),
+            granularity: granularity
+          }
+        })
         .then(res => {
           fulfill(res.data);
         })
         .catch(err => {
           console.log(err);
           reject(err);
-        })
+        });
     });
   }  //end promise
 }

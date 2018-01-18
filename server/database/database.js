@@ -7,6 +7,8 @@ const mongoTest = require('./mongoTest');
 
 require('../models/User');
 require('../models/Topic');
+require('../models/Order');
+
 require('../handlers/passport');
 
 var database = {
@@ -14,15 +16,15 @@ var database = {
     logger.log('DATABASE: initializing connection...');
 
     mongoose.connect(process.env.DATABASE, {})
-    .then(() => {
-      logger.log('DATABASE: Connected to mongodb');
-      //run mongo test here
-      // database.test();
-      //
-    })
-    .catch(err => {
-      console.log(err);
-    });
+      .then(() => {
+        logger.log('DATABASE: Connected to mongodb');
+        //run mongo test here
+        // database.test();
+        //
+      })
+      .catch(err => {
+        console.log(err);
+      });
 
     mongoose.connection.on('error', (err) => {
       logger.error('Mongoose connection error', err.message);
@@ -32,7 +34,8 @@ var database = {
   test: () => {
     // mongoTest.findOneAndUpdate();
     // mongoTest.saveDuplicateData();
-    mongoTest.returnLatestEntry();
+    // mongoTest.returnLatestEntry();
+    mongoTest.saveOrder();
   }
 
 }

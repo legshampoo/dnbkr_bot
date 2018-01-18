@@ -86,18 +86,18 @@ var socketServer = {
         }//END IF
 
         if(action.type === 'server/cancel_all_orders'){
-          console.log('CANCEL ALL ORDERS AHHHHH');
+          console.log('Client Command: CANCEL ALL OPEN ORDERS');
           gdax_bot.cancelAllOrders();
         }
 
         if(action.type === 'server/execute_market_buy'){
-          console.log('EXECUTE MARKET BUY');
-          gdax_bot.executeMarketBuy();
+          console.log('Client Command: EXECUTE MARKET BUY');
+          gdax_bot.executeMarketBuy(io);
         }
 
         if(action.type === 'server/execute_market_sell'){
-          console.log('EXECUTE MARKET SELL');
-          gdax_bot.executeMarketSell();
+          console.log('Client Command: EXECUTE MARKET SELL');
+          gdax_bot.executeMarketSell(io);
         }
       })
     });

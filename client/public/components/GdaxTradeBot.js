@@ -8,8 +8,8 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 import FlatButton from 'material-ui/FlatButton';
+import RaisedButton from 'material-ui/RaisedButton';
 
-// import styles from '../css/app.css';
 import {
   joinRoom
 } from '../actions/topicActions';
@@ -19,6 +19,22 @@ import {
   executeMarketBuy,
   executeMarketSell
 } from '../actions/marketActions';
+
+import {
+  Toolbar,
+  ToolbarGroup,
+  ToolbarSeparator,
+  ToolbarTitle
+} from 'material-ui/Toolbar';
+
+// import MacdChart from './MacdChart';
+import LineChartTest from './LineChartTest';
+import MacdHistogram from './MacdHistogram';
+import MacdLineChart from './MacdLineChart';
+import HistoricalLineChart from './HistoricalLineChart';
+import MarketDecisions from './MarketDecisions';
+
+import styles from '../css/app.css';
 
 class GdaxTradeBot extends React.Component {
   constructor(props){
@@ -32,13 +48,11 @@ class GdaxTradeBot extends React.Component {
   }
 
   componentDidMount(){
-    console.log('attempting to join btc room');
+
     this.props.joinRoom('market_feed');
   }
 
   handleOnClick(e){
-    // console.log(e);
-    console.log(e.currentTarget.value);
     const command = e.currentTarget.value;
 
     switch(command){
@@ -60,29 +74,31 @@ class GdaxTradeBot extends React.Component {
 
   renderControls(){
     return (
-      <div key='controls_key'>
-        renderControls
-        <FlatButton
-          key='cancel_all_orders'
-          label='Cancel All Orders'
-          value='cancel_all_orders'
-          onClick={this.handleOnClick} />
-        <FlatButton
-          key='execute_market_buy'
-          label='Market Buy'
-          value='execute_market_buy'
-          onClick={this.handleOnClick} />
-        <FlatButton
-          key='execute_market_sell'
-          label='Market Sell'
-          value='execute_market_sell'
-          onClick={this.handleOnClick} />
-      </div>
+      <Toolbar>
+        <ToolbarGroup>
+          <ToolbarTitle text='GDAX Trade Bot' />
+            <RaisedButton
+              key='cancel_all_orders'
+              label='Cancel Orders'
+              value='cancel_all_orders'
+              onClick={this.handleOnClick} />
+            <RaisedButton
+              key='execute_market_buy'
+              label='Market Buy'
+              value='execute_market_buy'
+              onClick={this.handleOnClick} />
+            <RaisedButton
+              key='execute_market_sell'
+              label='Market Sell'
+              value='execute_market_sell'
+              onClick={this.handleOnClick} />
+          <ToolbarTitle text={`Price: $ ${this.props.market.price}`}/>
+        </ToolbarGroup>
+      </Toolbar>
     )
   }
 
   renderAccounts(){
-    // console.log('render acccounts');
     if(this.props.market.accounts === undefined){
       return (
         <div>
@@ -142,10 +158,9 @@ class GdaxTradeBot extends React.Component {
 
   renderBotStatus(){
       if(this.props.market.bot_status === undefined){
-        console.log('bot has no status');
         return (
           <div>
-            bot appears to be offline (undefined props)...
+            bot status unknown...
           </div>
         )
       }
@@ -167,9 +182,17 @@ class GdaxTradeBot extends React.Component {
     return (
       <div>
         {this.renderControls()}
-        {this.renderMarketData()}
-        {this.renderBotStatus()}
-        {this.renderAccounts()}
+        <div className={styles.tradeBotDashboard}>
+          <MacdHistogram />
+          <MarketDecisions />
+          <HistoricalLineChart />
+          <MacdLineChart />
+          <div className={styles.botData}>
+            {this.renderMarketData()}
+            {this.renderBotStatus()}
+            {this.renderAccounts()}
+          </div>
+        </div>
       </div>)
   }
 }
