@@ -77,8 +77,8 @@ class HistoricalLineChart extends Component {
 
     return (
       <LineChart
-        width={800}
-        height={600}
+        width={700}
+        height={400}
         data={data}
         margin={{top: 10, right: 30, left: 20, bottom: 10}} >
       <XAxis

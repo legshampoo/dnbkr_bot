@@ -1,6 +1,6 @@
 const moment = require('moment');
 const Topic = require('../models/Topic');
-const Order = require('../models/Order');
+const Trade = require('../models/Trade');
 
 var utils = {
 

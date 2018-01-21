@@ -2,7 +2,8 @@
 // const io = require('socket.io')();
 var logger = require('tracer').colorConsole();
 const Topic = require('../models/Topic');
-const gdax_bot = require('../bots/trading/gdax/gdax_bot');
+// const gdax_bot = require('../bots/trading/gdax/gdax_bot');
+const gdax_bot = require('../bots/trading/gdax/bot');
 
 var connections = [];
 
@@ -51,9 +52,12 @@ var socketServer = {
           socket.room = room;
           socket.join(room)
 
-          var name = room;
-          var query = { name: name };
-          const topic = await Topic.find(query)
+          if(room === 'market_feed'){
+            //do nothing, it's not a topic
+          }else{
+            var name = room;
+            var query = { name: name };
+            const topic = await Topic.find(query)
             .then(res => {
               // console.log('RES: ');
               // console.log(res);
@@ -64,19 +68,21 @@ var socketServer = {
               return
             })
 
-          // topic = topic[0];
-          console.log('topic.name: ', topic[0].name);
-          // console.log('historicalData.length: ', topic.historicalData.length);
+            // topic = topic[0];
+            // console.log('topic.name: ', topic[0].name);
+            // console.log('historicalData.length: ', topic.historicalData.length);
 
-          var payload = {
-            name: topic[0].name,
-            historicalData: topic[0].historicalData
+            var payload = {
+              name: topic[0].name,
+              historicalData: topic[0].historicalData
+            }
+
+            socket.emit('action', {
+              type: 'topic_data',
+              payload: payload
+            });
+
           }
-
-          socket.emit('action', {
-            type: 'topic_data',
-            payload: payload
-          });
 
           console.log('SOCKET: Client is now in rooms: ');
 
@@ -92,12 +98,14 @@ var socketServer = {
 
         if(action.type === 'server/execute_market_buy'){
           console.log('Client Command: EXECUTE MARKET BUY');
-          gdax_bot.executeMarketBuy(io);
+          // gdax_bot.executeBuyOrder(io);
+          gdax_bot.executeBuyOrder();
         }
 
         if(action.type === 'server/execute_market_sell'){
           console.log('Client Command: EXECUTE MARKET SELL');
-          gdax_bot.executeMarketSell(io);
+          // gdax_bot.executeSellOrder(io);
+          gdax_bot.executeSellOrder();
         }
       })
     });

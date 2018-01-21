@@ -40,8 +40,8 @@ class GdaxTradeBot extends React.Component {
   constructor(props){
     super(props);
 
-    this.renderBotStatus = this.renderBotStatus.bind(this);
-    this.renderMarketData = this.renderMarketData.bind(this);
+    // this.renderBotStatus = this.renderBotStatus.bind(this);
+    // this.renderMarketData = this.renderMarketData.bind(this);
     this.renderAccounts = this.renderAccounts.bind(this);
     this.handleOnClick = this.handleOnClick.bind(this);
 
@@ -63,8 +63,19 @@ class GdaxTradeBot extends React.Component {
       case 'execute_market_buy':
         this.props.executeMarketBuy();
         return
+
       case 'execute_market_sell':
         this.props.executeMarketSell();
+        return
+
+      case 'halt_trading':
+        console.log('halt trading here');
+        // this.props.executeMarketSell();
+        return
+
+      case 'resume_trading':
+        console.log('resume trading here');
+        // this.props.executeMarketSell();
         return
 
       default:
@@ -77,6 +88,16 @@ class GdaxTradeBot extends React.Component {
       <Toolbar>
         <ToolbarGroup>
           <ToolbarTitle text='GDAX Trade Bot' />
+            <RaisedButton
+              key='halt_trading'
+              label='Halt Trading'
+              value='halt_trading'
+              onClick={this.handleOnClick} />
+            <RaisedButton
+              key='resume_trading'
+              label='Resume Trading'
+              value='resume_trading'
+              onClick={this.handleOnClick} />
             <RaisedButton
               key='cancel_all_orders'
               label='Cancel Orders'
@@ -114,7 +135,9 @@ class GdaxTradeBot extends React.Component {
       var account = accounts[item];
 
       const content = (
-        <div key={account.currency}>
+        <div
+          // className={styles.accountData}
+          key={account.currency}>
           <br />
           currency: {account.currency}<br />
           id: {account.id}<br />
@@ -122,7 +145,7 @@ class GdaxTradeBot extends React.Component {
           available: {account.available}<br />
           hold: {account.hold}<br />
           profile_id: {account.profile_id}<br />
-          <br />
+          {/* <br /> */}
         </div>
       );
 
@@ -130,50 +153,11 @@ class GdaxTradeBot extends React.Component {
     })
 
     return (
-      <div>
+      <div className={styles.accountData}>
+        Accounts:
         {contents}
       </div>
     )
-  }
-
-  renderMarketData(){
-    if(this.props.market === undefined){
-      console.log('market data undefined');
-      return (
-        <div>
-          waiting for market data...
-        </div>
-      )
-    }
-
-    return (
-      <div>
-        Market Data:<br />
-        Exchange: {this.props.market.exchange}<br />
-        Trading Pair: {this.props.market.pair}<br />
-        Current Price: {this.props.market.price}<br />
-      </div>
-    )
-  }
-
-  renderBotStatus(){
-      if(this.props.market.bot_status === undefined){
-        return (
-          <div>
-            bot status unknown...
-          </div>
-        )
-      }
-
-      return (
-        <div>
-          Bot Status:<br />
-          Communication: {this.props.market.bot_status.status} <br />
-          Time: {this.props.market.bot_status.time} <br />
-          Exchange: {this.props.market.bot_status.exchange} <br />
-          Trading Pair: {this.props.market.bot_status.pair} <br />
-        </div>
-      )
   }
 
   render(){
@@ -187,11 +171,7 @@ class GdaxTradeBot extends React.Component {
           <MarketDecisions />
           <HistoricalLineChart />
           <MacdLineChart />
-          <div className={styles.botData}>
-            {this.renderMarketData()}
-            {this.renderBotStatus()}
-            {this.renderAccounts()}
-          </div>
+          {this.renderAccounts()}
         </div>
       </div>)
   }

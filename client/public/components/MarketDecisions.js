@@ -26,6 +26,8 @@ class MarketDecisions extends Component {
     super(props);
 
     this.renderData = this.renderData.bind(this);
+    this.renderMarketData = this.renderMarketData.bind(this);
+    this.renderBotStatus = this.renderBotStatus.bind(this);
 
   }
 
@@ -42,6 +44,48 @@ class MarketDecisions extends Component {
       this.props = nextProps;
 
     }
+  }
+
+  renderMarketData(){
+    if(this.props.market === undefined){
+      console.log('market data undefined');
+      return (
+        <div>
+          waiting for market data...
+        </div>
+      )
+    }
+
+    return (
+      <div className={styles.marketData}>
+        Market Data:<br />
+        Exchange: {this.props.market.exchange}<br />
+        Trading Pair: {this.props.market.pair}<br />
+        Current Price: {this.props.market.price}<br />
+      </div>
+    )
+  }
+
+  renderBotStatus(){
+    if(this.props.market.bot_status === undefined){
+      return (
+        <div>
+          no decision data
+        </div>
+      )
+    }
+
+    var status = this.props.market.bot_status;
+
+    return (
+      <div>
+        Bot Status:<br />
+        Communication: {status.status} <br />
+        Time: {status.time} <br />
+        Exchange: {status.exchange} <br />
+        Trading Pair: {status.pair} <br />
+      </div>
+    )
   }
 
   renderData(){
@@ -62,11 +106,13 @@ class MarketDecisions extends Component {
 
 
     return (
-      <div className={styles.marketDecisions}>
-        BOT DECISION: {trade_decision} <br />
+      <div>
+        Bot Action:
+        Time: {time} <br />
+        Price: {decisionPrice} <br />
         Market Trend: {trend} <br />
-        At: {time} <br />
-        Price: {decisionPrice}
+        BOT DECISION: {trade_decision} <br />
+        <br />
       </div>
     )
   }
@@ -74,8 +120,13 @@ class MarketDecisions extends Component {
   render(){
 
     return (
-      <div>
-        {this.renderData()}
+      <div className={styles.marketDecisions}>
+        Data:
+        {this.renderData()} <br />
+        Bot Status:
+        {this.renderBotStatus()} <br />
+        Market Data:
+        {this.renderMarketData()} <br />
       </div>)
   }
 }

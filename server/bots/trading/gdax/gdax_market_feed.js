@@ -1,5 +1,16 @@
 require('dotenv').config({ path: 'variables.env' });
+
+// const gdax_bot = require('./gdax_bot');
+const bot = require('./bot');
+
 const GTT = require('gdax-trading-toolkit');
+// import * as GTT = import('gdax')
+//this is from tutorial file in node_modules/gdax-trading-toolkit/t002_liveOrderbook.js
+var core_1 = require("gdax-trading-toolkit/build/src/core");
+
+var printOrderbook = GTT.utils.printOrderbook;
+// import * as GTT from 'gdax-trading-toolkit';
+// import ('gdax-trading-toolkit');
 const GTT_logger = GTT.utils.ConsoleLoggerFactory({
   level: 'info'
 });
@@ -12,8 +23,10 @@ const SMA = require('technicalindicators').SMA;
 
 const _macd = require('macd');
 
+const BigNumber = require('bignumber.js');
 
-const gdax_bot = require('./gdax_bot');
+
+// var openOrders = require('./gdax_bot').openOrders;
 
 const BTC_USD = 'BTC-USD';
 const ETH_BTC = 'ETH-BTC';
@@ -21,16 +34,6 @@ const ETH_USD = 'ETH-USD';
 const LTC_BTC = 'LTC-BTC';
 const LTC_USD = 'LTC-USD';
 const BCH_USD = 'BCH-USD';
-
-const products = [BTC_USD];
-
-const GDAXAuthConfig = {
-  auth: {
-    key: process.env.GDAX_KEY,
-    secret: process.env.GDAX_SECRET,
-    passphrase: process.env.GDAX_PASSPHRASE
-  }
-}
 
 const base = process.env.GDAX_BASE;
 
@@ -48,9 +51,19 @@ var historicalData = [];
 
 var marketData = {
 
+  trend: '',
+
+  bidPrice: 0,
+
+  askPrice: 0,
+
+  BTC_USD_PRICE: 0,
+
   init: async (io) => {
 
     console.log('Market Feed: init');
+
+    bot.init(io);
 
     marketData.initDataFeeds(io);
 
@@ -61,9 +74,9 @@ var marketData = {
     marketData.updateMACD(io);  //one once to fill latest data
 
     setInterval(() => {
-      console.log('\n\n\n');
-      console.log('Updating MACD');
-      console.log('\n');
+      // console.log('\n\n\n');
+      // console.log('Updating MACD');
+      // console.log('\n');
       marketData.updateMACD(io);
     }, MACD_pollingRate);
   },
@@ -83,7 +96,7 @@ var marketData = {
       var newTimeBlock = data[0][0];
 
       if(currentTimeBlock !== newTimeBlock){
-        console.log('NEW DATA ADDED TO MACD');
+        // console.log('NEW DATA ADDED TO MACD');
         historicalData.unshift(data[0]);
       }else{
         //do nothing, no new data
@@ -136,19 +149,21 @@ var marketData = {
     var histogramValue = macd[macd.length - 1].histogram;
 
     var TRADE_DECISION = '';
-    var TREND = '';
+    // var TREND = '';
 
     if(previousHistogramValue < 0){
       if(histogramValue > 0){
         console.log('TREND: CHANGE - GOING UP - BUY');
-        
-        TRADE_DECISION = 'BUY';
-        TREND = 'TURNING UP'
 
-        gdax_bot.executeMarketBuy(io);
+        TRADE_DECISION = 'BUY';
+        // TREND = 'TURNING UP'
+        marketData.trend = 'UP';
+
+        bot.executeBuyOrder();
       }else{
         TRADE_DECISION = 'DO_NOTHING';
-        TREND = 'DOWN';
+        // TREND = 'DOWN';
+        marketData.trend  = 'DOWN';
       }
     }
     if(previousHistogramValue > 0){
@@ -157,23 +172,26 @@ var marketData = {
         console.log('TREND: CHANGE - GOING DOWN - SELL');
 
         TRADE_DECISION = 'SELL';
-        TREND = 'TURNING DOWN';
+        // TREND = 'TURNING DOWN';
+        marketData.trend = 'DOWN';
 
-        gdax_bot.executeMarketSell(io);
+        bot.executeSellOrder();
       }else{
         TRADE_DECISION = 'DO NOTHING';
-        TREND = 'UP';
+        // TREND = 'UP';
+        marketData.trend = 'UP';
       }
     }
 
     var currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
-    var price = gdax_bot.BTC_USD_PRICE;
+    // var price = gdax_bot.BTC_USD_PRICE;
+    var price = marketData.BTC_USD_PRICE;
 
     var payload = {
       time: currentTime,
       currentPrice: price,
       trade_decision: TRADE_DECISION,
-      trend: TREND
+      trend: marketData.trend
     }
 
     io.to('market_feed').emit('action', {
@@ -242,30 +260,109 @@ var marketData = {
   initTickerFeed: (io) => {
     GTT_logger.info('GDAX Market Feed Init');
 
+    const GDAXAuthConfig = {
+      auth: {
+        key: process.env.GDAX_KEY,
+        secret: process.env.GDAX_SECRET,
+        passphrase: process.env.GDAX_PASSPHRASE
+      }
+    }
+
+    const products = [BTC_USD];
+
     GTT.Factories.GDAX.FeedFactory(GTT_logger, products, GDAXAuthConfig)
       .then((feed) => {
+
+        const LiveBookConfig = {
+          product: BTC_USD,
+          logger: GTT_logger
+        }
+
+        const book = new core_1.LiveOrderbook(LiveBookConfig);
+
+        book.on('LiveOrderbook.snapshot', function(){
+          logger.log('info', 'Snapshot received by LiveOrderbook');
+
+          setInterval(() => {
+            var bids = book.ordersForValue('sell', 100, false);
+            var asks = book.ordersForValue('buy', 100, false);
+            var bigNumberBid = new BigNumber(bids[0].orders[0].price);
+            var bigNumberAsk = new BigNumber(asks[0].orders[0].price);
+
+            marketData.bidPrice = bigNumberBid.toNumber();
+            marketData.askPrice = bigNumberAsk.toNumber();
+
+          }, 3000);
+        });
+
+        book.on('LiveOrderbook.trade', function (trade) {
+          if(bot.openOrders.length > 0){
+            var makerId = trade.origin.maker_order_id;
+            var takerId = trade.origin.taker_order_id;
+            // console.log('Open Orders: ');
+            bot.openOrders.forEach(order => {
+              if(makerId === order.id || takerId === order.id){
+                console.log('\n\n');
+                console.log('TRADE SETTLED: ', order.id);
+                console.log('SIDE: ', order.side);
+                console.log('PRICE: ', order.price);
+                console.log('\n\n');
+
+                console.log('MY ORDER DETAILS =======');
+                console.log(order);
+                bot.lastTrade = moment();
+                console.log('----------TRADE data');
+                console.log(trade);
+                console.log('type of trade: ', order.side);
+
+                // var order = order.side;
+                var time = moment().local().format('YYYY-MM-DD HH:mm:ss');
+                var exchange = 'GDAX';
+
+                var payload = {
+                  order: order.side,
+                  id: order.id,
+                  time: time,
+                  exchange: exchange,
+                  data: trade
+                }
+
+                bot.saveTrade(payload);
+                // var index = bot.openOrders.indexOf(order);
+                // if(index !== -1){
+                //   bot.openOrders.splice(index, 1);
+                // }
+              }
+            })
+          }
+        });
+
+        feed.pipe(book);
+
         feed.on('data', (msg) => {
-          if(msg.type !== 'ticker'){
-            return
+
+          if(msg.type === 'ticker'){
+            var price = msg.origin.price;
+
+            price = parseFloat(price).toFixed(2);
+
+            marketData.BTC_USD_PRICE = price;
+            // console.log('PRICE: ', price);
+
+            var payload = {
+              exchange: 'GDAX',
+              pair: BTC_USD,
+              price: price
+            };
+
+            io.to('market_feed').emit('action', {
+              type: 'market_feed',
+              payload: payload
+            });
           }
 
-          var price = msg.origin.price;
 
-          price = parseFloat(price).toFixed(2);
 
-          gdax_bot.BTC_USD_PRICE = price;
-          // console.log('PRICE: ', price);
-
-          var payload = {
-            exchange: 'GDAX',
-            pair: BTC_USD,
-            price: price
-          };
-
-          io.to('market_feed').emit('action', {
-            type: 'market_feed',
-            payload: payload
-          });
         })
       })
       .catch((err) => {
@@ -292,7 +389,7 @@ var marketData = {
 
   getHistoricalData: async (pair, binLength) => {
     //gets the historical data, binLength is in minutes
-    logger.info('Market: Getting historical data for ' + pair + ' market on Gdax');
+    // logger.info('Market: Getting historical data for ' + pair + ' market on Gdax');
 
     // const granularity = binLength * 60;  //binlength is in minutes
     const granularity = 60;

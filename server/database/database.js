@@ -7,7 +7,7 @@ const mongoTest = require('./mongoTest');
 
 require('../models/User');
 require('../models/Topic');
-require('../models/Order');
+require('../models/Trade');
 
 require('../handlers/passport');
 

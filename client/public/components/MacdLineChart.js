@@ -57,8 +57,8 @@ class MacdLineChart extends Component {
 
     return (
       <LineChart
-        width={800}
-        height={600}
+        width={700}
+        height={400}
         data={data} >
       <XAxis
         dataKey={'time'}

@@ -63,8 +63,8 @@ class MacdHistogram extends Component {
 
     return (
       <BarChart
-        width={800}
-        height={600}
+        width={700}
+        height={400}
         data={data}
         margin={{top: 5, right: 30, left: 20, bottom: 5}} >
         <XAxis

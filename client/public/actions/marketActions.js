@@ -2,6 +2,7 @@ export const SUBSCRIBE_TO_MARKET_FEED = 'server/subscribe_to_market_feed';
 export const CANCEL_ALL_ORDERS = 'server/cancel_all_orders';
 export const EXECUTE_MARKET_BUY = 'server/execute_market_buy';
 export const EXECUTE_MARKET_SELL = 'server/execute_market_sell';
+export const HALT_TRADING = 'server/halt_trading';
 
 export function createTopic(values){
   console.log('DISPATCH: ', SUBSCRIBE_TO_MARKET_FEED);
@@ -52,6 +53,15 @@ export function executeMarketSell(values){
 
   return {
     type: EXECUTE_MARKET_SELL,
+    payload: values
+  }
+}
+
+export function haltTrading(values){
+  console.log('DISPATCH: ', HALT_TRADING);
+
+  return {
+    type: HALT_TRADING,
     payload: values
   }
 }
