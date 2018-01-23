@@ -45,11 +45,12 @@ var prevEMA = 0;  //used as a temp var
 const fastPeriod = 12;
 const slowPeriod = 26;
 const signalPeriod = 9;
-const binDuration = 1;  //in minutes
 const MACD_pollingRate = 10 * 1000;
 var historicalData = [];
 
 var marketData = {
+
+  binDuration: 5,  //candlestick duration
 
   trend: '',
 
@@ -84,7 +85,7 @@ var marketData = {
   updateMACD: async (io) => {
     // console.log('getting historical data');
 
-    var data = await marketData.getHistoricalData(BTC_USD, binDuration);  //pair, minutes
+    var data = await marketData.getHistoricalData(BTC_USD, marketData.binDuration);  //pair, minutes
 
     marketData.emitHistoricalData(data, io);
 
@@ -391,8 +392,8 @@ var marketData = {
     //gets the historical data, binLength is in minutes
     // logger.info('Market: Getting historical data for ' + pair + ' market on Gdax');
 
-    // const granularity = binLength * 60;  //binlength is in minutes
-    const granularity = 60;
+    const granularity = binLength * 60;  //binlength is in minutes
+    // const granularity = 60;
 
     const path = '/products/' + pair + '/candles';
 

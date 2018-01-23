@@ -31,7 +31,8 @@ module.exports.gdaxOrders = [];
 module.exports.openOrders = [];
 module.exports.TRADING_ENABLED = true;
 module.exports.BTC_USD = 'BTC-USD';
-module.exports.tradeWaitPeriod = 60;
+module.exports.tradeWaitPeriod = marketData.binDuration * 60;
+// module.exports.tradeWaitPeriod = marketData.binDuration * 0;
 module.exports.lastTrade = moment();
 
 module.exports.init = (_io) => {
@@ -91,7 +92,7 @@ module.exports.getAccountInfo = () => {
 }
 
 module.exports.initOrderAdjustments = () => {
-  var adjustRate = 2;  //seconds
+  var adjustRate = 1;  //seconds
   setInterval(() => {
     this.adjustOpenOrders();
   }, 1000 * adjustRate)
@@ -148,75 +149,79 @@ module.exports.getOpenOrders = () => {
       })
 }
 
-module.exports.executeBuyOrder = async (orders) => {
+module.exports.executeBuyOrder = async () => {
     var time = moment();
     // console.log('BUY');
-    console.log('CHECKING ORDERS IN BOOK: ', this.openOrders);
-
-    if(this.openOrders.length > 0){
-      console.log('ORDER IS ALREADY ON THE BOOKS');
-      return;
-    }else{
-      console.log('Placing Order...');
-    }
-
-    var orderbook = await this.getOrderBook();
-    var topBid = parseFloat(orderbook.bids[0][0]);
-    var topBid = marketData.bidPrice;
-
-    var bidPrice = topBid - this.orderAdjustment;
-
-    if(!this.TRADING_ENABLED){
-      console.log('GDAX BOT: TRADING DISABLED');
-      return
-    }
-
-    var now = moment();
-    var elapsed = now.diff(this.lastTrade, 'seconds');
-
-    if(elapsed < this.tradeWaitPeriod){
-      var remaining = 60 - elapsed;
-      console.log('Need to wait ' + remaining + ' seconds before making a trade');
-      return;
-    }
-
-    const params = {
-      price: bidPrice,
-      size: this.minOrderSize,
-      product_id: 'BTC-USD',
-      time_in_force: 'GTT',
-      cancel_after: 'hour'
-    }
-
-    authedClient.buy(params)
+    this.getOpenOrders()
       .then(res => {
-        console.log(res);
+        this.openOrders = res;
+        console.log('CHECKING ORDERS IN BOOK: ', this.openOrders);
 
-        // var order = {
-        //   id: res.id,
-        //   price: res.price,
-        //   side: res.side
-        // }
-        //
-        // this.openOrders.push(order);
-
-        var trade_time = moment(time).local().format('YYYY-MM-DD HH:mm:ss');
-
-        var payload = {
-          time: trade_time,
-          price: params.price,
-          action: 'BUY',
-          size: params.size,
-          exchange: 'GDAX',
-          pair: 'BTC_USD'
+        if(this.openOrders.length > 0){
+          console.log('ORDER IS ALREADY ON THE BOOKS');
+          return;
+        }else{
+          console.log('Placing Order...');
         }
 
-        io.to('market_feed').emit('action', {
-          type: 'bot_action',
-          payload: payload
-        });
+        // var orderbook = await this.getOrderBook();
+        this.getOrderBook()
+          .then(res => {
+            var orderbook = res;
+            var topBid = parseFloat(orderbook.bids[0][0]);
+            var topBid = marketData.bidPrice;
 
-        // this.saveOrder(payload);
+            var bidPrice = topBid - this.orderAdjustment;
+
+            if(!this.TRADING_ENABLED){
+              console.log('GDAX BOT: TRADING DISABLED');
+              return
+            }
+
+            var now = moment();
+            var elapsed = now.diff(this.lastTrade, 'seconds');
+
+            if(elapsed < this.tradeWaitPeriod){
+              var remaining = (marketData.binDuration * 60) - elapsed;
+              console.log('Need to wait ' + remaining + ' seconds before making a trade');
+              return;
+            }
+
+            const params = {
+              price: bidPrice,
+              size: this.minOrderSize,
+              product_id: 'BTC-USD',
+              time_in_force: 'GTT',
+              cancel_after: 'hour'
+            }
+
+            authedClient.buy(params)
+              .then(res => {
+                console.log(res);
+
+                var trade_time = moment(time).local().format('YYYY-MM-DD HH:mm:ss');
+
+                var payload = {
+                  time: trade_time,
+                  price: params.price,
+                  action: 'BUY',
+                  size: params.size,
+                  exchange: 'GDAX',
+                  pair: 'BTC_USD'
+                }
+
+                io.to('market_feed').emit('action', {
+                  type: 'bot_action',
+                  payload: payload
+                });
+              })
+              .catch(err => {
+                console.log(err);
+              })
+        })
+        .catch(err => {
+          console.log(err);
+        })
       })
       .catch(err => {
         console.log(err);
@@ -227,80 +232,85 @@ module.exports.executeSellOrder = async () => {
 
   var time = moment();
 
-  if(this.openOrders.length > 0){
-    console.log('TRIED TO SELL BUT THERE ARE ALREADY ORDERS ON THE BOOK');
-    return;
-  }else{
-    console.log('Making Trade');
-  }
-
-  // var orderbook = await this.getOrderBook();
-
-  // var lowestAsk = parseFloat(orderbook.asks[0][0]);
-  var lowestAsk = marketData.askPrice;
-
-  var askPrice = lowestAsk + this.orderAdjustment;
-
-  if(!this.TRADING_ENABLED){
-    console.log('GDAX BOT: TRADING DISABLED');
-    return
-  }
-
-  var now = moment();
-  var elapsed = now.diff(this.lastTrade, 'seconds');
-
-  if(elapsed < this.tradeWaitPeriod){
-    var remaining = 60 - elapsed;
-    console.log('Need to wait ' + remaining + ' seconds before making a trade');
-    return;
-  }
-
-  var params = {
-    price: askPrice,
-    size: this.minOrderSize,
-    product_id: 'BTC-USD',
-    time_in_force: 'GTT',
-    cancel_after: 'hour'
-  }
-
-  authedClient.sell(params)
+  this.getOpenOrders()
     .then(res => {
-      console.log(res);
+      this.openOrders = res;
 
-      // var order = {
-      //   id: res.id,
-      //   price: res.price,
-      //   side: res.side
-      // }
-      //
-      // this.openOrders.push(order);
-
-      var trade_time = moment(time).format('YYYY-MM-DD HH:mm:ss');
-
-      var payload = {
-        time: trade_time,
-        price: params.price,
-        action: 'SELL',
-        size: params.size,
-        exchange: 'GDAX',
-        pair: 'BTC_USD'
+      if(this.openOrders.length > 0){
+        console.log('TRIED TO SELL BUT THERE ARE ALREADY ORDERS ON THE BOOK');
+        return;
+      }else{
+        console.log('Making Trade');
       }
 
-      io.to('market_feed').emit('action', {
-        type: 'bot_action',
-        payload: payload
-      });
+      // var orderbook = await this.getOrderBook();
+      this.getOrderBook()
+        .then(res => {
+          var orderbook = res;
+          var lowestAsk = parseFloat(orderbook.asks[0][0]);
+          // var lowestAsk = marketData.askPrice;
 
-      // this.saveOrder(payload);
+          var askPrice = lowestAsk + this.orderAdjustment;
+
+          if(!this.TRADING_ENABLED){
+            console.log('GDAX BOT: TRADING DISABLED');
+            return
+          }
+
+          var now = moment();
+          var elapsed = now.diff(this.lastTrade, 'seconds');
+
+          if(elapsed < this.tradeWaitPeriod){
+            var remaining = (marketData.binDuration * 60) - elapsed;
+            console.log('Need to wait ' + remaining + ' seconds before making a trade');
+            return;
+          }
+
+          var params = {
+            price: askPrice,
+            size: this.minOrderSize,
+            product_id: 'BTC-USD',
+            time_in_force: 'GTT',
+            cancel_after: 'hour'
+          }
+
+          authedClient.sell(params)
+            .then(res => {
+              console.log(res);
+              var trade_time = moment(time).format('YYYY-MM-DD HH:mm:ss');
+
+              var payload = {
+                time: trade_time,
+                price: params.price,
+                action: 'SELL',
+                size: params.size,
+                exchange: 'GDAX',
+                pair: 'BTC_USD'
+              }
+
+              io.to('market_feed').emit('action', {
+                type: 'bot_action',
+                payload: payload
+              });
+            })
+            .catch(err => {
+              console.log(err);
+            })
+          
+        })
+        .catch(err => {
+          console.log(err);
+        })
+
     })
     .catch(err => {
       console.log(err);
-    })
+    });
+
+
 }
 
 module.exports.getOrderBook = () => {
-  // console.log('getting order book');
-
   var path = '/products/' + this.BTC_USD + '/book';
 
   var url = baseURI + path;
@@ -320,29 +330,6 @@ module.exports.getOrderBook = () => {
       });
     })
 }
-
-// module.exports.saveOrder = async (payload) => {
-//   const order = new Order({
-//     order: payload.action,
-//     time: payload.time.toString(),
-//     size: payload.size,
-//     price: payload.price,
-//     exchange: payload.exchange,
-//     pair: payload.pair
-//   });
-//
-//   order.save()
-//     .then(res => {
-//       console.log('GDAX BOT: Market order saved to database');
-//       // console.log('TYPE: ', payload.action);
-//       return
-//     })
-//     .catch(err => {
-//       console.log('GDAX BOT: Error saving order to mongodb');
-//       console.log(err);
-//       return
-//     })
-// }
 
 module.exports.saveTrade = async (payload) => {
   const tradeData = payload.data;
