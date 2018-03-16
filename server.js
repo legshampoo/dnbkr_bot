@@ -111,7 +111,7 @@ process.on('uncaughtException', function (exception) {
 const server = app.listen(app.get('port'), '0.0.0.0', function () {
   console.log('Server listening on port ' + app.get('port') + '!\n');
   database.init();
-  io.listen(server);
+  // io.listen(server);
 
   // socketServer.init(io);
   // reddit_bot.init(io);
