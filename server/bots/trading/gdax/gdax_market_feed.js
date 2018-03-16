@@ -61,11 +61,11 @@ var marketData = {
 
   init: async (io) => {
 
-    console.log('Market Feed: init');
+    console.log('NOT Market Feed: init');
 
-    // bot.init(io);
+    bot.init(io);
 
-    marketData.initDataFeeds(io);
+    // marketData.initDataFeeds(io);
 
   },
 
