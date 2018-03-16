@@ -75,9 +75,9 @@ var marketData = {
 
     setInterval(() => {
       // console.log('\n\n\n');
-      console.log('Updating MACD');
+      console.log('NOT UPDATIND Updating MACD');
       // console.log('\n');
-      marketData.updateMACD(io);
+      // marketData.updateMACD(io);
     }, MACD_pollingRate);
   },
 
@@ -273,7 +273,7 @@ var marketData = {
         }
 
         const book = new core_1.LiveOrderbook(LiveBookConfig);
-        console.log('00000000000');
+
         // book.on('LiveOrderbook.snapshot', function(){
         //   // logger.log('info', 'Snapshot received by LiveOrderbook');
         //
@@ -424,6 +424,7 @@ var marketData = {
           }
         })
         .then(res => {
+          console.log(res.data.length);
           fulfill(res.data);
         })
         .catch(err => {
