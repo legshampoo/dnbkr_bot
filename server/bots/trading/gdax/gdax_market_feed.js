@@ -267,14 +267,14 @@ var marketData = {
 
     GTT.Factories.GDAX.FeedFactory(GTT_logger, products, GDAXAuthConfig)
       .then((feed) => {
-
+        logger.log('INSIDE THEN');
         const LiveBookConfig = {
           product: BTC_USD,
           logger: GTT_logger
         }
 
         const book = new core_1.LiveOrderbook(LiveBookConfig);
-
+        logger.log(book);
         // book.on('LiveOrderbook.snapshot', function(){
         //   // logger.log('info', 'Snapshot received by LiveOrderbook');
         //
