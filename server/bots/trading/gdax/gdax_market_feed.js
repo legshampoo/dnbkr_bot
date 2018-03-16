@@ -63,7 +63,7 @@ var marketData = {
 
     console.log('Market Feed: init');
 
-    bot.init(io);
+    // bot.init(io);
 
     marketData.initDataFeeds(io);
 
