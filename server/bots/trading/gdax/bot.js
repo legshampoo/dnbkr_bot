@@ -13,7 +13,8 @@ const secret = process.env.GDAX_SECRET;
 const passphrase = process.env.GDAX_PASSPHRASE;
 const baseURI = 'https://api.gdax.com';
 
-const publicClient = new Gdax.PublicClient('BTC-USD', baseURI);
+// const publicClient = new Gdax.PublicClient('BTC-USD', baseURI);
+const publicClient = new Gdax.PublicClient(baseURI);
 const authedClient = new Gdax.AuthenticatedClient(
   key,
   secret,
@@ -32,7 +33,6 @@ module.exports.openOrders = [];
 module.exports.TRADING_ENABLED = true;
 module.exports.BTC_USD = 'BTC-USD';
 module.exports.tradeWaitPeriod = marketData.binDuration * 60;
-// module.exports.tradeWaitPeriod = marketData.binDuration * 0;
 module.exports.lastTrade = moment();
 
 module.exports.init = (_io) => {
@@ -102,6 +102,12 @@ module.exports.adjustOpenOrders = async () => {
   this.getOpenOrders()
     .then(res => {
       this.openOrders = res;
+
+      if(typeof this.openOrders === 'undefined'){
+        console.log('no open orders');
+        return
+      }
+
       if(this.openOrders.length > 0){
         this.openOrders.forEach(async (order) => {
           if(order.side === 'buy' && order.price < marketData.bidPrice){
@@ -296,7 +302,7 @@ module.exports.executeSellOrder = async () => {
             .catch(err => {
               console.log(err);
             })
-          
+
         })
         .catch(err => {
           console.log(err);

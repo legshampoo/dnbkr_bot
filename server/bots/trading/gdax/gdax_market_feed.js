@@ -37,20 +37,19 @@ const BCH_USD = 'BCH-USD';
 
 const base = process.env.GDAX_BASE;
 
-var prev_longEMA = 0;
-var prev_shortEMA = 0;
-
-var prevEMA = 0;  //used as a temp var
-
-const fastPeriod = 12;
-const slowPeriod = 26;
-const signalPeriod = 9;
+const fastPeriod = 12;   //3
+const slowPeriod = 26;   //5
+const signalPeriod = 9;   //9
 const MACD_pollingRate = 10 * 1000;
 var historicalData = [];
 
 var marketData = {
 
   binDuration: 5,  //candlestick duration
+
+  highThreshold: 5,
+
+  lowThreshold: -5,
 
   trend: '',
 
@@ -76,7 +75,7 @@ var marketData = {
 
     setInterval(() => {
       // console.log('\n\n\n');
-      // console.log('Updating MACD');
+      console.log('Updating MACD');
       // console.log('\n');
       marketData.updateMACD(io);
     }, MACD_pollingRate);
@@ -152,40 +151,36 @@ var marketData = {
     var TRADE_DECISION = '';
     // var TREND = '';
 
-    if(previousHistogramValue < 0){
-      if(histogramValue > 0){
+    if(previousHistogramValue < marketData.lowThreshold){
+      if(histogramValue > marketData.lowThreshold){
         console.log('TREND: CHANGE - GOING UP - BUY');
 
         TRADE_DECISION = 'BUY';
-        // TREND = 'TURNING UP'
         marketData.trend = 'UP';
 
         bot.executeBuyOrder();
       }else{
         TRADE_DECISION = 'DO_NOTHING';
-        // TREND = 'DOWN';
         marketData.trend  = 'DOWN';
       }
     }
-    if(previousHistogramValue > 0){
-      if(histogramValue < 0){
+    if(previousHistogramValue > marketData.highThreshold){
+      if(histogramValue < marketData.highThreshold){
         console.log(moment().format('YYYY-MM-DD HH:mm:ss'));
         console.log('TREND: CHANGE - GOING DOWN - SELL');
 
         TRADE_DECISION = 'SELL';
-        // TREND = 'TURNING DOWN';
         marketData.trend = 'DOWN';
 
         bot.executeSellOrder();
       }else{
         TRADE_DECISION = 'DO NOTHING';
-        // TREND = 'UP';
         marketData.trend = 'UP';
       }
     }
 
     var currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
-    // var price = gdax_bot.BTC_USD_PRICE;
+
     var price = marketData.BTC_USD_PRICE;
 
     var payload = {
@@ -229,8 +224,6 @@ var marketData = {
       pair: BTC_USD,
       historicalData: values
     };
-
-    // console.log('emit historical data');
 
     io.to('market_feed').emit('action', {
       type: 'historical_data',
@@ -285,6 +278,7 @@ var marketData = {
           logger.log('info', 'Snapshot received by LiveOrderbook');
 
           setInterval(() => {
+            console.log('calculating high/low bids');
             var bids = book.ordersForValue('sell', 100, false);
             var asks = book.ordersForValue('buy', 100, false);
             var bigNumberBid = new BigNumber(bids[0].orders[0].price);
@@ -293,10 +287,18 @@ var marketData = {
             marketData.bidPrice = bigNumberBid.toNumber();
             marketData.askPrice = bigNumberAsk.toNumber();
 
+            console.log(marketData.bidPrice);
+
           }, 3000);
         });
 
         book.on('LiveOrderbook.trade', function (trade) {
+          logger.log('book.on LiveOrderbook.trade');
+          logger.log('bot open orders: ', bot.openOrders);
+          if(typeof bot.openOrders === 'undefined'){
+            return
+          }
+
           if(bot.openOrders.length > 0){
             var makerId = trade.origin.maker_order_id;
             var takerId = trade.origin.taker_order_id;
@@ -329,10 +331,6 @@ var marketData = {
                 }
 
                 bot.saveTrade(payload);
-                // var index = bot.openOrders.indexOf(order);
-                // if(index !== -1){
-                //   bot.openOrders.splice(index, 1);
-                // }
               }
             })
           }
@@ -341,8 +339,9 @@ var marketData = {
         feed.pipe(book);
 
         feed.on('data', (msg) => {
-
+          // logger.log('feed got data');
           if(msg.type === 'ticker'){
+            logger.log('new ticker price');
             var price = msg.origin.price;
 
             price = parseFloat(price).toFixed(2);
@@ -353,7 +352,7 @@ var marketData = {
             var payload = {
               exchange: 'GDAX',
               pair: BTC_USD,
-              price: price
+              price: marketData.BTC_USD_PRICE
             };
 
             io.to('market_feed').emit('action', {
@@ -361,9 +360,6 @@ var marketData = {
               payload: payload
             });
           }
-
-
-
         })
       })
       .catch((err) => {
@@ -389,11 +385,8 @@ var marketData = {
   },
 
   getHistoricalData: async (pair, binLength) => {
-    //gets the historical data, binLength is in minutes
-    // logger.info('Market: Getting historical data for ' + pair + ' market on Gdax');
-
+    logger.log('getting historical data');
     const granularity = binLength * 60;  //binlength is in minutes
-    // const granularity = 60;
 
     const path = '/products/' + pair + '/candles';
 
