@@ -65,17 +65,17 @@ var marketData = {
 
     bot.init(io);
 
-    // marketData.initDataFeeds(io);
+    marketData.initDataFeeds(io);
 
   },
 
   initDataFeeds: (io) => {
-    marketData.initTickerFeed(io);
-    marketData.updateMACD(io);  //one once to fill latest data
+    // marketData.initTickerFeed(io);
+    // marketData.updateMACD(io);  //one once to fill latest data
 
     setInterval(() => {
       // console.log('\n\n\n');
-      console.log('Updating MACD');
+      console.log('not Updating MACD');
       // console.log('\n');
       // marketData.updateMACD(io);
     }, MACD_pollingRate);
