@@ -40,7 +40,7 @@ const base = process.env.GDAX_BASE;
 const fastPeriod = 12;   //3
 const slowPeriod = 26;   //5
 const signalPeriod = 9;   //9
-const MACD_pollingRate = 10 * 1000;
+const MACD_pollingRate = 3 * 1000; //10 * 1000;
 var historicalData = [];
 
 var marketData = {
@@ -274,107 +274,112 @@ var marketData = {
 
         const book = new core_1.LiveOrderbook(LiveBookConfig);
 
-        book.on('LiveOrderbook.snapshot', function(){
-          // logger.log('info', 'Snapshot received by LiveOrderbook');
+        // book.on('LiveOrderbook.snapshot', function(){
+        //   // logger.log('info', 'Snapshot received by LiveOrderbook');
+        //
+        //   setInterval(() => {
+        //     try{
+        //       // console.log('[[[[[[[[[[[[[calculating high/low bids]]]]]]]]]]]]]');
+        //       console.log('----------------------------------------------');
+        //       var bids = book.ordersForValue('sell', 3, false);  //originally 100
+        //       // var tenbids = book.ordersForValue('sell', 3, false);
+        //
+        //       var asks = book.ordersForValue('buy', 3, false); //originally 100
+        //       var bigNumberBid = new BigNumber(bids[0].orders[0].price);
+        //       // var bigNumberTenBid = new BigNumber(tenbids[0].orders[0].price);
+        //
+        //       var bigNumberAsk = new BigNumber(asks[0].orders[0].price);
+        //
+        //       marketData.bidPrice = bigNumberBid.toNumber();
+        //       // tenbidsPrice = bigNumberBid.toNumber();
+        //
+        //       // console.log('100 bids price: ', marketData.bidPrice);
+        //       // console.log('10 bids price: ', tenbidsPrice);
+        //
+        //       marketData.askPrice = bigNumberAsk.toNumber();
+        //
+        //       console.log('Market Bid Price: ', marketData.bidPrice);
+        //       console.log('Market Ask Price: ', marketData.askPrice);
+        //     }catch(e){
+        //       console.log(e);
+        //     }
+        //
+        //   }, 3000);
+        // });
 
-          setInterval(() => {
-            try{
-              console.log('[[[[[[[[[[[[[calculating high/low bids]]]]]]]]]]]]]');
-              var bids = book.ordersForValue('sell', 3, false);  //originally 100
-              // var tenbids = book.ordersForValue('sell', 3, false);
-
-              var asks = book.ordersForValue('buy', 3, false); //originally 100
-              var bigNumberBid = new BigNumber(bids[0].orders[0].price);
-              // var bigNumberTenBid = new BigNumber(tenbids[0].orders[0].price);
-
-              var bigNumberAsk = new BigNumber(asks[0].orders[0].price);
-
-              marketData.bidPrice = bigNumberBid.toNumber();
-              // tenbidsPrice = bigNumberBid.toNumber();
-
-              // console.log('100 bids price: ', marketData.bidPrice);
-              // console.log('10 bids price: ', tenbidsPrice);
-
-              marketData.askPrice = bigNumberAsk.toNumber();
-
-              console.log('Market Bid Price: ', marketData.bidPrice);
-              console.log('Market Ask Price: ', marketData.askPrice);
-            }catch(e){
-              console.log(e);
-            }
-
-          }, 3000);
-        });
-
-        book.on('LiveOrderbook.trade', function (trade) {
-          // logger.log('book.on LiveOrderbook.trade');
-          // logger.log('bot open orders: ', bot.openOrders);
-          if(typeof bot.openOrders === 'undefined'){
-            return
-          }
-
-          if(bot.openOrders.length > 0){
-            var makerId = trade.origin.maker_order_id;
-            var takerId = trade.origin.taker_order_id;
-            // console.log('Open Orders: ');
-            bot.openOrders.forEach(order => {
-              if(makerId === order.id || takerId === order.id){
-                console.log('\n\n');
-                console.log('TRADE SETTLED: ', order.id);
-                console.log('SIDE: ', order.side);
-                console.log('PRICE: ', order.price);
-                console.log('\n\n');
-
-                console.log('MY ORDER DETAILS =======');
-                console.log(order);
-                bot.lastTrade = moment();
-                console.log('----------TRADE data');
-                console.log(trade);
-                console.log('type of trade: ', order.side);
-
-                // var order = order.side;
-                var time = moment().local().format('YYYY-MM-DD HH:mm:ss');
-                var exchange = 'GDAX';
-
-                var payload = {
-                  order: order.side,
-                  id: order.id,
-                  time: time,
-                  exchange: exchange,
-                  data: trade
-                }
-
-                bot.saveTrade(payload);
-              }
-            })
-          }
-        });
+        // book.on('LiveOrderbook.trade', function (trade) {
+        //   // logger.log('book.on LiveOrderbook.trade');
+        //   // logger.log('bot open orders: ', bot.openOrders);
+        //   if(typeof bot.openOrders === 'undefined'){
+        //     return
+        //   }
+        //
+        //   if(bot.openOrders.length > 0){
+        //     var makerId = trade.origin.maker_order_id;
+        //     var takerId = trade.origin.taker_order_id;
+        //     // console.log('Open Orders: ');
+        //     bot.openOrders.forEach(order => {
+        //       try{
+        //         if(makerId === order.id || takerId === order.id){
+        //           console.log('\n\n');
+        //           console.log('TRADE SETTLED: ', order.id);
+        //           console.log('SIDE: ', order.side);
+        //           console.log('PRICE: ', order.price);
+        //           console.log('\n\n');
+        //
+        //           console.log('MY ORDER DETAILS =======');
+        //           console.log(order);
+        //           bot.lastTrade = moment();
+        //           console.log('----------TRADE data');
+        //           console.log(trade);
+        //           console.log('type of trade: ', order.side);
+        //
+        //           // var order = order.side;
+        //           var time = moment().local().format('YYYY-MM-DD HH:mm:ss');
+        //           var exchange = 'GDAX';
+        //
+        //           var payload = {
+        //             order: order.side,
+        //             id: order.id,
+        //             time: time,
+        //             exchange: exchange,
+        //             data: trade
+        //           }
+        //
+        //           bot.saveTrade(payload);
+        //         }
+        //       }catch(e){
+        //         console.log(e);
+        //       }
+        //     })
+        //   }
+        // });
 
         feed.pipe(book);
 
-        feed.on('data', (msg) => {
-          // logger.log('feed got data');
-          if(msg.type === 'ticker'){
-            // logger.log('new ticker price');
-            var price = msg.origin.price;
-
-            price = parseFloat(price).toFixed(2);
-
-            marketData.BTC_USD_PRICE = price;
-            // console.log('PRICE: ', price);
-
-            var payload = {
-              exchange: 'GDAX',
-              pair: BTC_USD,
-              price: marketData.BTC_USD_PRICE
-            };
-
-            io.to('market_feed').emit('action', {
-              type: 'market_feed',
-              payload: payload
-            });
-          }
-        })
+        // feed.on('data', (msg) => {
+        //   // logger.log('feed got data');
+        //   if(msg.type === 'ticker'){
+        //     // logger.log('new ticker price');
+        //     var price = msg.origin.price;
+        //
+        //     price = parseFloat(price).toFixed(2);
+        //
+        //     marketData.BTC_USD_PRICE = price;
+        //     // console.log('PRICE: ', price);
+        //
+        //     var payload = {
+        //       exchange: 'GDAX',
+        //       pair: BTC_USD,
+        //       price: marketData.BTC_USD_PRICE
+        //     };
+        //
+        //     io.to('market_feed').emit('action', {
+        //       type: 'market_feed',
+        //       payload: payload
+        //     });
+        //   }
+        // })
       })
       .catch((err) => {
         GTT_logger.log('error', err.message);
