@@ -273,7 +273,7 @@ var marketData = {
         }
 
         const book = new core_1.LiveOrderbook(LiveBookConfig);
-
+        console.log('00000000000');
         // book.on('LiveOrderbook.snapshot', function(){
         //   // logger.log('info', 'Snapshot received by LiveOrderbook');
         //
