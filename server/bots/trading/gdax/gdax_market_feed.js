@@ -253,6 +253,7 @@ var marketData = {
 
   initTickerFeed: (io) => {
     GTT_logger.info('GDAX Market Feed Init');
+    console.log('key: ', process.env.GDAX_KEY);
 
     const GDAXAuthConfig = {
       auth: {
