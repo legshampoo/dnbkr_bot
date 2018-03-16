@@ -70,7 +70,7 @@ var marketData = {
   },
 
   initDataFeeds: (io) => {
-    // marketData.initTickerFeed(io);
+    marketData.initTickerFeed(io);
     // marketData.updateMACD(io);  //one once to fill latest data
 
     setInterval(() => {
