@@ -275,7 +275,7 @@ var marketData = {
         const book = new core_1.LiveOrderbook(LiveBookConfig);
 
         book.on('LiveOrderbook.snapshot', function(){
-          logger.log('info', 'Snapshot received by LiveOrderbook');
+          // logger.log('info', 'Snapshot received by LiveOrderbook');
 
           setInterval(() => {
             console.log('calculating high/low bids');
@@ -293,8 +293,8 @@ var marketData = {
         });
 
         book.on('LiveOrderbook.trade', function (trade) {
-          logger.log('book.on LiveOrderbook.trade');
-          logger.log('bot open orders: ', bot.openOrders);
+          // logger.log('book.on LiveOrderbook.trade');
+          // logger.log('bot open orders: ', bot.openOrders);
           if(typeof bot.openOrders === 'undefined'){
             return
           }
@@ -341,7 +341,7 @@ var marketData = {
         feed.on('data', (msg) => {
           // logger.log('feed got data');
           if(msg.type === 'ticker'){
-            logger.log('new ticker price');
+            // logger.log('new ticker price');
             var price = msg.origin.price;
 
             price = parseFloat(price).toFixed(2);

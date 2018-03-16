@@ -95,6 +95,14 @@ app.get('*', (req, res) => {
   res.sendFile(__dirname + '/client/dist/index.html');
 });
 
+process.on('uncaughtException', function (exception) {
+  console.log('process uncaught exception');
+  // console.log(exception); // to see your exception details in the console
+  logger.error(exception);
+  // if you are on production, maybe you can send the exception details to your
+  // email as well ?
+});
+
 const server = app.listen(app.get('port'), '0.0.0.0', function () {
   console.log('Server listening on port ' + app.get('port') + '!\n');
   database.init();
