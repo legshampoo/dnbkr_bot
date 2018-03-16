@@ -119,6 +119,6 @@ const server = app.listen(app.get('port'), '0.0.0.0', function () {
   // gdax_bot.init(io);  //dont use this one
 });
 
-// setInterval(() => {
-//   console.log('eh');
-// }, 3000);
+setInterval(() => {
+  console.log('eh');
+}, 3000);
