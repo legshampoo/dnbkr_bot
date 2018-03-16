@@ -75,7 +75,7 @@ var marketData = {
 
     setInterval(() => {
       // console.log('\n\n\n');
-      console.log('NOT UPDATIND Updating MACD');
+      console.log('Updating MACD');
       // console.log('\n');
       // marketData.updateMACD(io);
     }, MACD_pollingRate);
