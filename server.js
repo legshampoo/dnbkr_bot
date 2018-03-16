@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');  //middleware used for validating data before entering into mongodb
 const historyApiFallback = require('connect-history-api-fallback');
 var logger = require('tracer').colorConsole();
+var errorhandler = require('errorhandler');
 
 // const session = require('express-session');  //manages sessions
 const mongoose = require('mongoose');  //interface for mongodb
@@ -47,6 +48,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(expressValidator());  //for validating data before mongo entry, applies the methods to all requests, you just call ie req.sanitize('name')
 app.use('/api', routes);
+app.use(errorhandler({
+  dumpExceptions: true,
+  showStack: true
+}))
 
 
 if(env == 'development'){

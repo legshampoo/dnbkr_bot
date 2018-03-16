@@ -278,16 +278,30 @@ var marketData = {
           // logger.log('info', 'Snapshot received by LiveOrderbook');
 
           setInterval(() => {
-            console.log('calculating high/low bids');
-            var bids = book.ordersForValue('sell', 100, false);
-            var asks = book.ordersForValue('buy', 100, false);
-            var bigNumberBid = new BigNumber(bids[0].orders[0].price);
-            var bigNumberAsk = new BigNumber(asks[0].orders[0].price);
+            try{
+              console.log('[[[[[[[[[[[[[calculating high/low bids]]]]]]]]]]]]]');
+              var bids = book.ordersForValue('sell', 3, false);  //originally 100
+              // var tenbids = book.ordersForValue('sell', 3, false);
 
-            marketData.bidPrice = bigNumberBid.toNumber();
-            marketData.askPrice = bigNumberAsk.toNumber();
+              var asks = book.ordersForValue('buy', 3, false); //originally 100
+              var bigNumberBid = new BigNumber(bids[0].orders[0].price);
+              // var bigNumberTenBid = new BigNumber(tenbids[0].orders[0].price);
 
-            console.log(marketData.bidPrice);
+              var bigNumberAsk = new BigNumber(asks[0].orders[0].price);
+
+              marketData.bidPrice = bigNumberBid.toNumber();
+              // tenbidsPrice = bigNumberBid.toNumber();
+
+              // console.log('100 bids price: ', marketData.bidPrice);
+              // console.log('10 bids price: ', tenbidsPrice);
+
+              marketData.askPrice = bigNumberAsk.toNumber();
+
+              console.log('Market Bid Price: ', marketData.bidPrice);
+              console.log('Market Ask Price: ', marketData.askPrice);
+            }catch(e){
+              console.log(e);
+            }
 
           }, 3000);
         });
