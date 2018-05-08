@@ -118,7 +118,3 @@ const server = app.listen(app.get('port'), '0.0.0.0', function () {
   gdax_market_feed.init(io);  //also kicks off the trading bot
   // gdax_bot.init(io);  //dont use this one
 });
-
-setInterval(() => {
-  console.log('eh');
-}, 3000);
